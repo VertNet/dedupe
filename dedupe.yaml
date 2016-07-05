@@ -1,0 +1,55 @@
+# This file is part of VertNet: https://github.com/VertNet/dedupe
+#
+# VertNet is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# VertNet is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with VertNet.  If not, see: http://www.gnu.org/licenses
+
+###
+
+# CODEBASE INFO
+# Last pushed to master branch: 
+# Last change to master branch: 
+#
+# DEPLOYMENT INFO
+# Last deployed dev version: 
+# Last deployed prod version: 
+# command: gcloud preview app deploy dedupe.yaml
+# args:
+#   --project vertnet-portal  # Optional, no need if gcloud is configured to use this project
+#   --version prod|dev  # Indicates version to use. If 'Prod', --promote flag should be used
+#   --promote  # Optional, removes the version id from the deployment URL. Skip for testing and/or dev version
+#
+# TODO:
+#   - Everything
+
+service: dedupe
+runtime: python27
+api_version: 1
+threadsafe: yes
+
+handlers:
+
+- url: /api/v0/*.*
+  script: dedupe.handlers
+
+
+libraries:
+- name: webapp2
+  version: "2.5.2"
+
+skip_files:
+- ^(.*/)?#.*#$
+- ^(.*/)?.*~$
+- ^(.*/)?.*\.py[co]$
+- ^(.*/)?.*/RCS/.*$
+- ^(.*/)?\..*$
+- ^data$

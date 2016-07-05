@@ -1,0 +1,30 @@
+De-duplication service
+===
+
+RESTful API. Flag duplicates in trivial and non-trivial ways:
+
+1. Trivial: actual duplicates
+1. Non-trivial: potential duplicates, like herbarium duplicates, where locality, date, collector and taxon are the same
+
+The result is the dataset with flags. These flags indicate actual/potential duplicates. Also, add a "reason" field.
+
+Workflow:
+
+1. Submit a dataset
+1. Depending on the f(x) (or argument/s):
+    1. Return a report
+    1. Return the dataset with flags
+    1. Return the dataset with no strict duplicates
+    1. Return the dataset with no duplicates, strict or not
+
+Add an internal "id" to reference records: "Record id 5 is the same as record id 1".
+
+If dataset has "occurrenceID", use it.
+
+First release, no fuzzy matching. Then, think about it for later releases
+
+Check these out:
+
+* [https://github.com/cyber4paleo/cyber4paleo.github.io/blob/master/_projects/team_paleoapi.md](https://github.com/cyber4paleo/cyber4paleo.github.io/blob/master/_projects/team_paleoapi.md)
+* [https://github.com/cyber4paleo/cyber4paleo.github.io/blob/master/_projects/team_darwin.md](https://github.com/cyber4paleo/cyber4paleo.github.io/blob/master/_projects/team_darwin.md)
+* [https://github.com/scottsfarley93/niche-API](https://github.com/scottsfarley93/niche-API)

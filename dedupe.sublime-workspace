@@ -1,0 +1,568 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"csv",
+				"csvfile"
+			],
+			[
+				"previous",
+				"previous_namespace"
+			],
+			[
+				"namespa",
+				"namespace_manager"
+			],
+			[
+				"queue",
+				"queue_name	(migration.py)"
+			],
+			[
+				"names",
+				"namespace_manager	(QueryLogger.py)"
+			],
+			[
+				"err",
+				"err_msg"
+			],
+			[
+				"results",
+				"results_by_resource"
+			],
+			[
+				"create",
+				"created_at	(util.py)"
+			],
+			[
+				"put",
+				"put_multi	(GetEvents.py)"
+			],
+			[
+				"QueryL",
+				"QueryLogEntry"
+			],
+			[
+				"class",
+				"class_data"
+			],
+			[
+				"explici",
+				"explicitClassGood"
+			],
+			[
+				"records",
+				"records_queried"
+			],
+			[
+				"downlo",
+				"downloads_data"
+			],
+			[
+				"down",
+				"downloads_data"
+			],
+			[
+				"new",
+				"new_download"
+			],
+			[
+				"last",
+				"last_vals"
+			],
+			[
+				"downloads",
+				"downloadsdata"
+			],
+			[
+				"failed",
+				"failed_repos"
+			],
+			[
+				"req",
+				"req_url"
+			],
+			[
+				"all",
+				"all_repos"
+			],
+			[
+				"cdb",
+				"cdb_url"
+			],
+			[
+				"api",
+				"apikey"
+			],
+			[
+				"M",
+				"myValue"
+			],
+			[
+				"se",
+				"scientificname"
+			],
+			[
+				"string",
+				"stringToColour"
+			],
+			[
+				"species",
+				"speciesBtn"
+			],
+			[
+				"typ",
+				"typeof"
+			],
+			[
+				"selected",
+				"selectedSpecies"
+			],
+			[
+				"selec",
+				"selectedSpecies"
+			],
+			[
+				"sele",
+				"selectedSpecies"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "Development notes.md",
+			"settings":
+			{
+				"buffer_size": 1290,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 217.0,
+		"last_filter": "projec",
+		"selected_items":
+		[
+			[
+				"projec",
+				"Project: Save As"
+			],
+			[
+				"sort",
+				"Sort Lines"
+			],
+			[
+				"",
+				"About"
+			],
+			[
+				"toc",
+				"MarkdownTOC:Insert TOC"
+			],
+			[
+				"close",
+				"Project: Close"
+			],
+			[
+				"repl ytho",
+				"SublimeREPL: Python"
+			],
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"commit",
+				"Git: Commit"
+			],
+			[
+				"git add",
+				"Git: Add..."
+			],
+			[
+				"project",
+				"Project: Save As"
+			],
+			[
+				"remove",
+				"Package Control: Remove Package"
+			],
+			[
+				"Snippet: ",
+				"Snippet: #!/usr/bin/env"
+			]
+		],
+		"width": 507.0
+	},
+	"console":
+	{
+		"height": 114.0,
+		"history":
+		[
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/home/jotegui/Projects/VertNet/dedupe/dedupe.md",
+		"/home/jotegui/Dropbox/Documentos/Manuscripts/rgeospatialquality/Submission.txt",
+		"/home/jotegui/Dropbox/Yo/CVs/trayectoria.txt",
+		"/home/jotegui/Desktop/locality.md",
+		"/home/jotegui/Desktop/dedupe.md",
+		"/media/jotegui/TOSHIBA EXT/Copias/20160530/Software/Windows/Office/O2013/O2013MAK.txt",
+		"/home/jotegui/.cache/.fr-2atMyh/rgeospatialquality.Rcheck/00check.log",
+		"/home/jotegui/.cache/.fr-J4SzCf/rgeospatialquality.Rcheck/00install.out",
+		"/home/jotegui/Projects/VertNet/QualityAPI_R/rgeospatialquality/cran-comments.md",
+		"/home/jotegui/Projects/Otros/rerintro/script.txt",
+		"/home/jotegui/Software/shotwell/shotwell-0.23.1/README",
+		"/home/jotegui/Software/shotwell/shotwell-0.23.1/INSTALL",
+		"/home/jotegui/Software/shotwell/shotwell-0.23.1/COPYING",
+		"/home/jotegui/Projects/VertNet/vn-tools/apitracker/admin/DayMigratorHandler.py",
+		"/home/jotegui/Projects/VertNet/vn-tools/apitracker/admin/MonthMigratorHandler.py",
+		"/home/jotegui/Projects/VertNet/vn-tools/apitracker/admin/MigratorHadler.py",
+		"/home/jotegui/Projects/VertNet/api/Logger/QueryLogger.py",
+		"/home/jotegui/Projects/VertNet/vn-tools/apitracker/models.py",
+		"/home/jotegui/Projects/VertNet/vn-tools/apitracker/util.py",
+		"/home/jotegui/Projects/VertNet/vn-tools/apitracker/apitracker.py",
+		"/home/jotegui/Projects/VertNet/vn-tools/apitracker/apitracker.yaml",
+		"/home/jotegui/Projects/VertNet/api/api.yaml",
+		"/home/jotegui/Projects/VertNet/portal-web/portal-web.yaml",
+		"/home/jotegui/Projects/VertNet/vn-tools/repochecker/repochecker.yaml",
+		"/home/jotegui/Projects/VertNet/vn-tools/batchemailer/batchemailer.yaml",
+		"/home/jotegui/Projects/VertNet/vn-tools/usagestats/usagestats.yaml",
+		"/home/jotegui/Projects/VertNet/vn-tools/usagestats/admin/parser/ProcessEvents.py",
+		"/home/jotegui/Projects/VertNet/vn-tools/usagestats/util.py",
+		"/home/jotegui/Projects/VertNet/vn-tools/apitracker/model.py",
+		"/home/jotegui/Projects/VertNet/vn-tools/usagestats/config.py",
+		"/home/jotegui/Projects/VertNet/vn-tools/usagestats/admin/parser/GitHubIssue.py",
+		"/home/jotegui/Projects/VertNet/api/Search/SearchAPI.py",
+		"/home/jotegui/Projects/VertNet/api/Search/search.py",
+		"/home/jotegui/Projects/VertNet/vn-tools/usagestats/admin/parser/GetEvents.py",
+		"/home/jotegui/Projects/VertNet/webapp/vertnet/service/api.py",
+		"/home/jotegui/Projects/VertNet/webapp/vertnet/service/tracker.py",
+		"/home/jotegui/Projects/VertNet/webapp/vertnet/service/util.py",
+		"/home/jotegui/Projects/VertNet/webapp/vertnet/service/user.py",
+		"/home/jotegui/Projects/VertNet/webapp/vertnet/service/search.py",
+		"/home/jotegui/Projects/VertNet/webapp/vertnet/service/download.py",
+		"/home/jotegui/Projects/VertNet/vn-tools/apitracker/Development.md",
+		"/home/jotegui/Projects/VertNet/vn-tools/usagestats/admin/parser/GitHubStore.py",
+		"/home/jotegui/Projects/VertNet/vn-tools/usagestats/usagestats.py",
+		"/tmp/mozilla_jotegui0/pandoc.1.md",
+		"/home/jotegui/Projects/VertNet/vn-tools/apitracker/admin/__init__.py",
+		"/home/jotegui/.config/sublime-text-3/Packages/GitGutter/GitGutter.sublime-settings",
+		"/home/jotegui/.bashrc",
+		"/home/jotegui/Dropbox/Projects/VertNet/vn-tools/apitracker/.gitignore",
+		"/home/jotegui/Projects/VertNet/webapp/vertnet/service/tasks/util.py",
+		"/home/jotegui/Projects/VertNet/webapp/vertnet/service/tasks/getrecords.py",
+		"/home/jotegui/Projects/VertNet/webapp/vertnet/service/tasks/getmetadata.py",
+		"/home/jotegui/Projects/VertNet/webapp/vertnet/service/tasks/getdownloads.py",
+		"/home/jotegui/Projects/VertNet/webapp/vertnet/service/tasks/daily_portal_stats.py",
+		"/home/jotegui/Dropbox/Projects/VertNet/webapp/app.yaml",
+		"/home/jotegui/.config/sublime-text-3/Packages/Default/Preferences.sublime-settings",
+		"/home/jotegui/.config/sublime-text-3/Packages/User/Preferences.sublime-settings",
+		"/home/jotegui/Dropbox/Projects/VertNet/webapp/vertnet/service/tracker.py",
+		"/home/jotegui/Dropbox/Projects/cartodb-wrapper/ng/static/js/app.js",
+		"/home/jotegui/Dropbox/Projects/VertNet/webapp/vertnet/service/stats.py",
+		"/home/jotegui/Dropbox/Projects/VertNet/webapp/vertnet/service/search.py",
+		"/home/jotegui/Dropbox/Projects/VertNet/webapp/vertnet/service/rpc.py",
+		"/home/jotegui/Dropbox/Projects/VertNet/webapp/vertnet/service/record.py",
+		"/home/jotegui/Dropbox/Projects/VertNet/webapp/vertnet/service/download.py",
+		"/home/jotegui/Dropbox/Projects/VertNet/webapp/vertnet/service/user.py",
+		"/home/jotegui/Dropbox/Projects/VertNet/webapp/vertnet/service/util.py",
+		"/home/jotegui/Dropbox/Projects/VertNet/webapp/vertnet/service/github.py",
+		"/home/jotegui/Dropbox/Projects/VertNet/webapp/vertnet/service/indexer.py",
+		"/home/jotegui/Dropbox/Projects/VertNet/webapp/vertnet/service/model.py",
+		"/home/jotegui/Dropbox/Projects/VertNet/webapp/vertnet/service/organization.py",
+		"/home/jotegui/Dropbox/Projects/VertNet/webapp/vertnet/service/__init__.py",
+		"/home/jotegui/Dropbox/Projects/VertNet/webapp/queue.yaml",
+		"/home/jotegui/Dropbox/Projects/VertNet/webapp/vertnet/service/tasks/daily_portal_stats.py",
+		"/home/jotegui/Dropbox/Projects/VertNet/webapp/vertnet/service/repochecker.py",
+		"/home/jotegui/Dropbox/Projects/VertNet/PublisherStats/util.py",
+		"/home/jotegui/Dropbox/Projects/VertNet/PublisherStats/uploadToGithub.py",
+		"/home/jotegui/Dropbox/Projects/VertNet/PublisherStats/checkNameConsistency.py",
+		"/home/jotegui/Dropbox/Projects/VertNet/webapp/app.py",
+		"/home/jotegui/Dropbox/Projects/MapOfLife/PointUploader/app.yaml",
+		"/home/jotegui/Dropbox/Projects/MapOfLife/PointUploader/loader_app/templates/base.html",
+		"/home/jotegui/Dropbox/Projects/MapOfLife/PointUploader/loader_app/static/js/controllers.js",
+		"/home/jotegui/Dropbox/Projects/MapOfLife/PointUploader/loader_app/templates/user/records.html",
+		"/home/jotegui/Dropbox/Projects/MapOfLife/PointUploader/loader_app/static/js/app.js",
+		"/home/jotegui/Dropbox/Projects/MapOfLife/PointUploader/loader_app/static/js/services.js",
+		"/home/jotegui/Dropbox/Projects/MapOfLife/PointUploader/loader_app/services/records.py",
+		"/home/jotegui/Courses/AngularJS/index.html",
+		"/home/jotegui/Dropbox/Projects/MapOfLife/PointUploader/loader_app/services/loader.py",
+		"/home/jotegui/Dropbox/Projects/MapOfLife/ngPointUploader/app.yaml",
+		"/home/jotegui/Dropbox/Projects/VertNet/ngEmailer/app.yaml",
+		"/home/jotegui/Projects/VertNet/webapp/vertnet/service/stats.py",
+		"/home/jotegui/Projects/MapOfLife/PointUploader/loader_app/cartodb_apikey.py",
+		"/home/jotegui/Projects/MapOfLife/PointUploader/loader_app/functions_viz.py",
+		"/home/jotegui/Projects/jotegui.github.io/index.html",
+		"/home/jotegui/.config/sublime-text-3/Packages/User/Distraction Free.sublime-settings",
+		"/home/jotegui/.config/sublime-text-3/Packages/User/JSON.sublime-settings"
+	],
+	"find":
+	{
+		"height": 22.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			")",
+			"current_",
+			"2016-05-20T11:11:53+CEST",
+			"res_counts",
+			"google",
+			"maxdate",
+			"getMaxDate",
+			"\n    ",
+			"query_l",
+			"query_",
+			"cdb_key",
+			"CartoDB",
+			"())\n",
+			"loading",
+			"dId",
+			"            \n",
+			"createMap",
+			"createMapConfig"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "Development notes.md",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1290,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								543,
+								543
+							]
+						],
+						"settings":
+						{
+							"bracket_highlighter.busy": false,
+							"bracket_highlighter.locations":
+							{
+								"close":
+								{
+								},
+								"open":
+								{
+								},
+								"unmatched":
+								{
+								}
+							},
+							"bracket_highlighter.regions":
+							[
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_default_content",
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_regex_content",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_double_quote_content",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_square_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_curly_content",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_unmatched_content",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_c_define_content",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_tag_content",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_round_content",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_single_quote_content"
+							],
+							"syntax": "Packages/MarkdownHighlighting/Markdown.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 21.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"output.git":
+	{
+		"height": 88.0
+	},
+	"pinned_build_system": "",
+	"project": "dedupe.sublime-project",
+	"replace":
+	{
+		"height": 40.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 500.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"",
+				"~/Projects/VertNet/api/vn-api.sublime-project"
+			],
+			[
+				"usage",
+				"~/Projects/VertNet/vn-tools/usagestats/usagestats.sublime-project"
+			]
+		],
+		"width": 380.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": true,
+	"show_tabs": true,
+	"side_bar_visible": false,
+	"side_bar_width": 150.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
