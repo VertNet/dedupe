@@ -81,6 +81,18 @@ class ReportApi(webapp2.RequestHandler):
         # Prepare output
         self.response.headers['Content-Type'] = "application/json"
 
+        # Check email
+        self.email = self.request.get("email", None)
+        if self.email is None:
+            self.error(400)
+            err_message = "Please provide an email address"
+            resp = {
+                "status": "error",
+                "error": err_message
+            }
+            self.response.write(json.dumps(resp)+"\n")
+            return
+
         # Get content from request body
         self.file = self.request.body_file.file
 
@@ -112,15 +124,16 @@ class ReportApi(webapp2.RequestHandler):
             k = hashlib.md5(str(row)).hexdigest()
 
             # Check if hash exists in memcache
-            dupe = memcache.get(k)
+            dupe = memcache.get(k, namespace=self.request_namespace)
             if dupe is not None:
                 self.duplicates += 1
                 self.duplicate_ids.add(row[idx])
                 self.duplicate_order.add(self.records)
             else:
-                memcache.set(k, True)
+                memcache.set(k, True, namespace=self.request_namespace)
 
         metadata = {
+            "email": self.email,
             "records": self.records,
             "fields": len(self.headers),
             # "headers": self.headers,

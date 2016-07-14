@@ -1,6 +1,5 @@
 # Dev and compile stuff
 *.pyc
-Dev*
 *.sublime*
 
 # Data folder
