@@ -1,4 +1,4 @@
-De-duplication service
+De-duplication service (dev notes)
 ===
 
 <!-- MarkdownTOC -->
@@ -13,6 +13,7 @@ De-duplication service
         1. [\(fixed\) Problem with newlines](#fixed-problem-with-newlines)
     1. [email on `querystring`](#email-on-querystring)
         1. [\(fixed\) Issue: body not read if email is read first](#fixed-issue-body-not-read-if-email-is-read-first)
+    1. [identify the 'id' field](#identify-the-id-field)
 1. [How to find duplicates](#how-to-find-duplicates)
     1. [`memcache`](#memcache)
     1. [hashing](#hashing)
@@ -20,9 +21,14 @@ De-duplication service
     1. [is datastore better?](#is-datastore-better)
     1. [cleaning up namespaces](#cleaning-up-namespaces)
     1. [Final decision](#final-decision)
+1. [How to build the report](#how-to-build-the-report)
 1. [How to deliver results](#how-to-deliver-results)
 
 <!-- /MarkdownTOC -->
+
+
+
+
 
 <a name="key-points"></a>
 # Key points
@@ -33,10 +39,18 @@ De-duplication service
 - Each request will operate in its own `namespace`
 - Full duplicates will be checked with `md5` hashes
 
+
+
+
+
 <a name="wild-ideas"></a>
 # Wild ideas
 
 - Accept csv, txt, json and dwca (zip)
+
+
+
+
 
 <a name="initial-meeting"></a>
 # Initial meeting
@@ -69,6 +83,10 @@ Check these out:
 * [https://github.com/cyber4paleo/cyber4paleo.github.io/blob/master/_projects/team_darwin.md](https://github.com/cyber4paleo/cyber4paleo.github.io/blob/master/_projects/team_darwin.md)
 * [https://github.com/scottsfarley93/niche-API](https://github.com/scottsfarley93/niche-API)
 
+
+
+
+
 <a name="usage"></a>
 # Usage
 
@@ -81,6 +99,10 @@ Report:
 ```bash
 curl -X POST -H "Content-Type: text/csv" --data-binary @file http://<service_url>/api/<version>/report?email=foo@bar.baz
 ```
+
+
+
+
 
 <a name="how-to-handle-content"></a>
 # How to handle content
@@ -169,6 +191,21 @@ If I switch the order, then the file is stored but there is no line to read.
 
 How to fix it? Using a `Content-Type` header. If the request specifies a `Content-Type` of `text/csv` or `text/plain`, the `body` becomes a `LimitedLengthFile` object (with a `cStringIO.StringI` file object and a `maxlength` attribute). Now, I can saely use the `.file` propery again.
 
+<a name="identify-the-id-field"></a>
+## identify the 'id' field
+
+A key component is the "id" field, because it will serve as an identifier for which record the duplicate is duplicate of. Both in the case of the report and the flag methods, each duplicate will show the id of the "original" record.
+
+In principle, DWCAs will have either the `occurrenceid` or an `id` field, or an "id" can be determined from the `meta.xml` file. However, this might not be the case. I should offer a way of specifying the "id" field.
+
+A first option, that overrides anything else, is to look for an `id` parameter in the `querystring`. If there is no such parameter, I can look for an `id` field, then an `occurrenceid` field.
+
+But what if none is present? Should I throw a warning? Stop with an error? Go ahead with the first column? With no "id" reference, just the position in the record set?
+
+
+
+
+
 <a name="how-to-find-duplicates"></a>
 # How to find duplicates
 
@@ -219,6 +256,15 @@ So, I guess the best option is to:
     1. If not, add line hash to `memcache`
 1. Repeat until end of file
 1. Let `memcache` items and `namespace` die slow and painfully
+
+<a name="how-to-build-the-report"></a>
+# How to build the report
+
+Duplicate pairs
+
+
+
+
 
 <a name="how-to-deliver-results"></a>
 # How to deliver results

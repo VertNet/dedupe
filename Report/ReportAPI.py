@@ -86,6 +86,7 @@ class ReportApi(webapp2.RequestHandler):
         if self.email is None:
             self.error(400)
             err_message = "Please provide an email address"
+            logging.error(err_message)
             resp = {
                 "status": "error",
                 "error": err_message
@@ -105,16 +106,36 @@ class ReportApi(webapp2.RequestHandler):
         self.duplicate_ids = set()
         self.duplicate_order = set()
 
-        # Find "id" field
-        if 'id' in self.headers_lower:
-            idx = self.headers_lower.index('id')
-        # Otherwise find "occurrenceid" field
-        elif 'occurrenceid' in self.headers_lower:
-            idx = self.headers_lower.index('occurrenceid')
-        # Otherwise, show warning and use first field
-        else:
-            logging.warning("No 'id' field could be reliably determined")
-            idx = 0
+        # Check "id" parameter
+        id_field = self.request.get("id", None)
+        # If not given
+        if id_field is None:
+            if 'id' in self.headers_lower:
+                id_field = 'id'
+            # Otherwise find "occurrenceid" field
+            elif 'occurrenceid' in self.headers_lower:
+                id_field = 'occurrenceid'
+            # Otherwise, show warning and use first field
+            else:
+                logging.warning("No 'id' field could be reliably determined")
+                id_field = None
+                idx = 0
+        # Otherwise, check if field exists in headers
+        elif id_field.lower() not in self.headers_lower:
+            self.error(400)
+            err_message = "Could not find field '%s' in headers" % id_field
+            logging.error(err_message)
+            resp = {
+                "status": "error",
+                "error": err_message
+            }
+            self.response.write(json.dumps(resp)+"\n")
+            return
+
+        # Calculating "id" field position
+        idx = self.headers_lower.index(id_field.lower())
+        logging.info("Using %s as 'id' field" % id_field)
+        logging.info("'id' field in position %s" % idx)
 
         # Parse records
         for row in reader:
