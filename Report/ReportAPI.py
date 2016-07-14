@@ -26,9 +26,13 @@ Usage:
 """
 
 import os
+import csv
 import json
+import uuid
+import hashlib
 import logging
 
+from google.appengine.api import namespace_manager, memcache
 import webapp2
 
 LAST_UPDATED = ''
@@ -45,17 +49,94 @@ else:
 class ReportApi(webapp2.RequestHandler):
     """."""
     def __init__(self, request, response):
+
+        # Get request headers
         self.cityLatLong = request.headers.get('X-AppEngine-CityLatLong')
         self.country = request.headers.get('X-AppEngine-Country')
         self.user_agent = request.headers.get('User-Agent')
+
+        # Handle namespace for this request
+        self.previous_namespace = namespace_manager.get_namespace()
+        self.request_namespace = str(uuid.uuid4())
+        namespace_manager.set_namespace(self.request_namespace)
+        logging.info("Switched to namespace %s" % self.request_namespace)
+
+        # Initialize response
         logging.info('Initializing Report with headers %s' % request.headers)
         self.initialize(request, response)
         return
 
-    def post(self):
-        self.response.headers['Content-Type'] = "application/json"
+    def _err(self, err_code=500, err_message="", err_explain=""):
+        self.error(err_code)
         resp = {
-            "hello": "world"
+            "status": "error",
+            "error": err_message,
+            "message": err_explain
         }
+        self.response.write(json.dumps(resp)+"\n")
+        return
+
+    def post(self):
+
+        # Prepare output
+        self.response.headers['Content-Type'] = "application/json"
+
+        # Get content from request body
+        self.file = self.request.body_file.file
+
+        # Initialize parsing
+        reader = csv.reader(self.file, delimiter="\t")
+        self.headers = reader.next()
+        self.headers_lower = [x.lower() for x in self.headers]
+        self.records = 0
+        self.duplicates = 0
+        self.duplicate_ids = set()
+        self.duplicate_order = set()
+
+        # Find "id" field
+        if 'id' in self.headers_lower:
+            idx = self.headers_lower.index('id')
+        # Otherwise find "occurrenceid" field
+        elif 'occurrenceid' in self.headers_lower:
+            idx = self.headers_lower.index('occurrenceid')
+        # Otherwise, show warning and use first field
+        else:
+            logging.warning("No 'id' field could be reliably determined")
+            idx = 0
+
+        # Parse records
+        for row in reader:
+            self.records += 1
+
+            # Calculate md5 hash
+            k = hashlib.md5(str(row)).hexdigest()
+
+            # Check if hash exists in memcache
+            dupe = memcache.get(k)
+            if dupe is not None:
+                self.duplicates += 1
+                self.duplicate_ids.add(row[idx])
+                self.duplicate_order.add(self.records)
+            else:
+                memcache.set(k, True)
+
+        metadata = {
+            "records": self.records,
+            "fields": len(self.headers),
+            # "headers": self.headers,
+            "strict_duplicates": self.duplicates
+        }
+
+        if self.duplicates > 0:
+            metadata["strict_duplicate_records"] = list(self.duplicate_order)
+            metadata["strict_duplicate_ids"] = list(self.duplicate_ids)
+
+        # TODO: flush memcache
+
+        # Return to default namespace
+        namespace_manager.set_namespace(self.previous_namespace)
+
+        # Build response
+        resp = metadata
         self.response.write(json.dumps(resp)+"\n")
         return
