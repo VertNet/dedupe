@@ -5,7 +5,6 @@ De-duplication service (dev notes)
 
 1. [Key points](#key-points)
 1. [File extensions and `Content-Type` values](#file-extensions-and-content-type-values)
-1. [Wild ideas](#wild-ideas)
 1. [Initial meeting](#initial-meeting)
 1. [Usage](#usage)
 1. [How to handle requests](#how-to-handle-requests)
@@ -41,7 +40,7 @@ De-duplication service (dev notes)
 - Email must be sent in the querystring, parameter `email`
 - Name of the ID field should be sent in the querystring, parameter `id`
 - Fields for partial duplicates will be sent in the querystring, parameter `fields`
-- `Content-Type` and file extension will be used to determine file format, in that order. [See table below](#file-extensions-and-content-type-values) for examples.
+- `Content-Type` will be used to determine file format, in that order. [See table below](#file-extensions-and-content-type-values) for examples.
 - Each request will operate in its own `namespace`
 - Full duplicates will be checked with `md5` hashes
 
@@ -55,19 +54,10 @@ De-duplication service (dev notes)
 | File type | Extension | `Content-Type` |
 |--------|----------------|---------------|
 | CSV | `.csv` | `text/csv` |
-| Tab separated | `.txt` | `text/tab-separated-values` |
-| Tab separated | `.tsv` | `text/tab-separated-values` |
+| Tab separated | `.txt` or `tsv` | `text/tab-separated-values` |
 | DarwinCore Archive | `.zip` | `application/zip` |
 | DarwinCore Archive (preferred) | `.zip` | `application/x-dwca` |
 | JSON | `.json` | `application/json` |
-
-
-
-
-<a name="wild-ideas"></a>
-# Wild ideas
-
-- Accept csv, txt, json and dwca (zip)
 
 
 
@@ -240,7 +230,7 @@ But what if none is present? Should I throw a warning? Stop with an error? Go ah
 
 So far, I made the API return a 400 error if the field specified as "id" is not among the headers. The only thing left here is to determine what to do when no suitable "id" field is present.
 
-I guess, for now, I will omit the "duplicate ids" field if no "id" field can be properly detected.
+I guess, for now, I will omit the "duplicate ids" field if no "id" field can be properly detected, without stoping the process.
 
 
 

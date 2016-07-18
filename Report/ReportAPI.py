@@ -86,7 +86,7 @@ class ReportApi(webapp2.RequestHandler):
         # Prepare output
         self.response.headers['Content-Type'] = "application/json"
 
-        # Check email
+        # Check email exists in parameters
         self.email = self.request.get("email", None)
         if self.email is None:
             self.error(400)
@@ -111,7 +111,7 @@ class ReportApi(webapp2.RequestHandler):
             self._err(400, "No 'Content-Type' was provided", err_explain)
             return
 
-        # Establish field separator
+        # Establish field separator based on Content-Type
         if self.content_type == "text/csv":
             delimiter = ","
         elif self.content_type == "text/tab-separated-values":
@@ -147,34 +147,36 @@ class ReportApi(webapp2.RequestHandler):
             self._err(400, "Wrong 'Content-Type' header", err_explain)
             return
 
+        # Initialize report values
         self.records = 0
         self.duplicates = 0
-        self.duplicate_ids = set()
         self.duplicate_order = set()
 
         # Check "id" parameter
         id_field = self.request.get("id", None)
         # If not given
         if id_field is None:
+            # Find "id" field
             if 'id' in self.headers_lower:
                 id_field = 'id'
             # Otherwise find "occurrenceid" field
             elif 'occurrenceid' in self.headers_lower:
                 id_field = 'occurrenceid'
-            # Otherwise, show warning and use first field
+            # Otherwise, show warning and don't show "id"-related info
             else:
                 logging.warning("No 'id' field could be reliably determined")
                 id_field = None
-                idx = 0
         # Otherwise, check if field exists in headers
         elif id_field.lower() not in self.headers_lower:
             self._err(400, "Could not find field '%s' in headers" % id_field)
             return
 
-        # Calculating "id" field position
-        idx = self.headers_lower.index(id_field.lower())
-        logging.info("Using %s as 'id' field" % id_field)
-        logging.info("'id' field in position %s" % idx)
+        # Calculating "id" field position, if exists
+        if id_field is not None:
+            idx = self.headers_lower.index(id_field.lower())
+            logging.info("Using %s as 'id' field" % id_field)
+            logging.info("'id' field in position %s" % idx)
+            self.duplicate_ids = set()
 
         # Parse records
         for row in reader:
@@ -187,8 +189,9 @@ class ReportApi(webapp2.RequestHandler):
             dupe = memcache.get(k, namespace=self.request_namespace)
             if dupe is not None:
                 self.duplicates += 1
-                self.duplicate_ids.add(row[idx])
                 self.duplicate_order.add((dupe, self.records))
+                if id_field is not None:
+                    self.duplicate_ids.add(row[idx])
             else:
                 memcache.set(k, self.records, namespace=self.request_namespace)
 
@@ -206,7 +209,8 @@ class ReportApi(webapp2.RequestHandler):
 
         if self.duplicates > 0:
             sd["index_pairs"] = list(self.duplicate_order)
-            sd["ids"] = list(self.duplicate_ids)
+            if id_field is not None:
+                sd["ids"] = list(self.duplicate_ids)
 
         # Add duplicates to report
         report["strict_duplicates"] = sd
