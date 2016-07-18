@@ -46,6 +46,7 @@ else:
     QUEUE_NAME = 'dedupes'
 
 _ALLOWED_ACTIONS = ["report", "flag", "remove"]
+_ALLOWED_TYPES = ["text/csv", "text/tab-separated-values"]
 
 
 class ReportApi(webapp2.RequestHandler):
@@ -75,6 +76,8 @@ class ReportApi(webapp2.RequestHandler):
             "error": err_message,
             "message": err_explain
         }
+        logging.error(err_message)
+        logging.error(err_explain)
         self.response.write(json.dumps(resp)+"\n")
         return
 
@@ -96,6 +99,30 @@ class ReportApi(webapp2.RequestHandler):
             self.response.write(json.dumps(resp)+"\n")
             return
 
+        # Determine file format via 'Content-Type'
+        self.content_type = self.request.headers['Content-Type']
+        logging.info("Content-Type: %s" % self.content_type)
+
+        if self.content_type == "application/x-www-form-urlencoded":
+            err_explain = "'Content-Type' is a required header for the" \
+                          " proper working of the API." \
+                          " Please read the documentation for examples on" \
+                          " how to set this parameter"
+            self._err(400, "No 'Content-Type' was provided", err_explain)
+            return
+
+        # Establish field separator
+        if self.content_type == "text/csv":
+            delimiter = ","
+        elif self.content_type == "text/tab-separated-values":
+            delimiter = "\t"
+        else:
+            err_explain = "The value of 'Content-Type' is not among the" \
+                          " accepted values for this header. Should be one" \
+                          " of: %s" % ", ".join(_ALLOWED_TYPES)
+            self._err(400, "Wrong 'Content-Type' header", err_explain)
+            return
+
         # Determine action ("report" by default)
         self.action = self.request.get("action", "report")
         if self.action not in _ALLOWED_ACTIONS:
@@ -109,9 +136,17 @@ class ReportApi(webapp2.RequestHandler):
         self.file = self.request.body_file.file
 
         # Initialize parsing
-        reader = csv.reader(self.file, delimiter="\t")
+        reader = csv.reader(self.file, delimiter=delimiter)
         self.headers = reader.next()
         self.headers_lower = [x.lower() for x in self.headers]
+
+        # Check if proper field delimiter
+        if len(self.headers) == 1:
+            err_explain = "The system ended up with 1-field rows. Please" \
+                          " check the 'Content-Type' parameter"
+            self._err(400, "Wrong 'Content-Type' header", err_explain)
+            return
+
         self.records = 0
         self.duplicates = 0
         self.duplicate_ids = set()
@@ -133,14 +168,7 @@ class ReportApi(webapp2.RequestHandler):
                 idx = 0
         # Otherwise, check if field exists in headers
         elif id_field.lower() not in self.headers_lower:
-            self.error(400)
-            err_message = "Could not find field '%s' in headers" % id_field
-            logging.error(err_message)
-            resp = {
-                "status": "error",
-                "error": err_message
-            }
-            self.response.write(json.dumps(resp)+"\n")
+            self._err(400, "Could not find field '%s' in headers" % id_field)
             return
 
         # Calculating "id" field position
@@ -169,8 +197,6 @@ class ReportApi(webapp2.RequestHandler):
             "email": self.email,
             "records": self.records,
             "fields": len(self.headers),
-            # "headers": self.headers,
-            # "strict_duplicates": self.duplicates
         }
 
         # Build strict_duplicates
