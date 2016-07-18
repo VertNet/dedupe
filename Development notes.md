@@ -4,6 +4,7 @@ De-duplication service (dev notes)
 <!-- MarkdownTOC -->
 
 1. [Key points](#key-points)
+1. [File extensions and `Content-Type` values](#file-extensions-and-content-type-values)
 1. [Wild ideas](#wild-ideas)
 1. [Initial meeting](#initial-meeting)
 1. [Usage](#usage)
@@ -12,7 +13,7 @@ De-duplication service (dev notes)
         1. [`self.request.body_file`](#selfrequestbody_file)
         1. [\(fixed\) Problem with newlines](#fixed-problem-with-newlines)
     1. [email on `querystring`](#email-on-querystring)
-        1. [\(fixed\) Issue: body not read if email is read first](#fixed-issue-body-not-read-if-email-is-read-first)
+        1. [\(fixed\) body not read if email is read first](#fixed-body-not-read-if-email-is-read-first)
     1. [identify the 'id' field](#identify-the-id-field)
 1. [How to find duplicates](#how-to-find-duplicates)
     1. [`memcache`](#memcache)
@@ -34,11 +35,29 @@ De-duplication service (dev notes)
 # Key points
 
 - Content of file must be sent via the `body` of the request
+- Data will be read in streaming
 - Email must be sent in the querystring, parameter `email`
-- `Content-Type` must be set to `text/csv`
+- Name of the ID field should be sent in the querystring, parameter `id`
+- Fields for partial duplicates will be sent in the querystring, parameter `fields`
+- `Content-Type` and file extension will be used to determine file format, in that order. [See table below](#file-extensions-and-content-type-values) for examples.
 - Each request will operate in its own `namespace`
 - Full duplicates will be checked with `md5` hashes
 
+
+
+
+
+<a name="file-extensions-and-content-type-values"></a>
+# File extensions and `Content-Type` values
+
+| File type | Extension | `Content-Type` |
+|--------|----------------|---------------|
+| CSV | `.csv` | `text/csv` |
+| Tab separated | `.txt` | `text/tab-separated-values` |
+| Tab separated | `.tsv` | `text/tab-separated-values` |
+| DarwinCore Archive | `.zip` | `application/zip` |
+| DarwinCore Archive (preferred) | `.zip` | `application/x-dwca` |
+| JSON | `.json` | `application/json` |
 
 
 
@@ -117,7 +136,9 @@ I have been exploring how to properly store the data and it seems it will have t
 * The Blobstore: Google now recommends switching to cloud storage instead (see first line [here](https://cloud.google.com/appengine/docs/python/blobstore/))
 * Streaming data: that would be nice for small files, but what if the data exceeds the 128Mb memory limit? Not an option, I'm afraid.
 
-Primary way of sending data will be CSV|TXT. I'll also support JSON.
+Still, in order to send big files to Cloud Storage, they need to go via instances, so the 128Mb limit still applies? **Let's try for now with data streaming**.
+
+Primary way of sending data will be CSV|TXT. I'll also support JSON and DWCA.
 
 <a name="selfrequestbody_file"></a>
 ### `self.request.body_file`
@@ -158,8 +179,8 @@ When the file is too large to be parsed in the typical request time, the ideal s
 curl -i -X POST --data-binary @file.csv <url>?email=foo@bar.baz
 ```
 
-<a name="fixed-issue-body-not-read-if-email-is-read-first"></a>
-### (fixed) Issue: body not read if email is read first
+<a name="fixed-body-not-read-if-email-is-read-first"></a>
+### (fixed) body not read if email is read first
 
 I get the following error when adding a `self.request.get('email', None)` before parsing the body:
 
@@ -189,7 +210,7 @@ If I switch the order, then the file is stored but there is no line to read.
 
 **OK, found it!** It has to do with the type of object that gets created by `WebOb` to store the value of the `body` content. If no `querystring` is provided, the parser detects the `body` object to be a file-like object and, therefore, assigns it to some sort of `cStringIO.StringI` object. But when adding the `querystring`, things get messed up. The `body` gets inserted into a `FakeCGIBody`, which doesn't have a `file` member, so the usual way of reading doesn't work.
 
-How to fix it? Using a `Content-Type` header. If the request specifies a `Content-Type` of `text/csv` or `text/plain`, the `body` becomes a `LimitedLengthFile` object (with a `cStringIO.StringI` file object and a `maxlength` attribute). Now, I can saely use the `.file` propery again.
+How to fix it? Using a `Content-Type` header. If the request specifies a `Content-Type` of `text/csv` or `text/plain`, the `body` becomes a `LimitedLengthFile` object (with a `cStringIO.StringI` file object and a `maxlength` attribute). Now, I can safely use the `.file` propery again.
 
 <a name="identify-the-id-field"></a>
 ## identify the 'id' field
@@ -201,6 +222,8 @@ In principle, DWCAs will have either the `occurrenceid` or an `id` field, or an 
 A first option, that overrides anything else, is to look for an `id` parameter in the `querystring`. If there is no such parameter, I can look for an `id` field, then an `occurrenceid` field.
 
 But what if none is present? Should I throw a warning? Stop with an error? Go ahead with the first column? With no "id" reference, just the position in the record set?
+
+So far, I made the API return a 400 error if the field specified as "id" is not among the headers. The only thing left here is to determine what to do when no suitable "id" field is present.
 
 
 
