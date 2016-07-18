@@ -8,7 +8,8 @@ De-duplication service (dev notes)
 1. [Wild ideas](#wild-ideas)
 1. [Initial meeting](#initial-meeting)
 1. [Usage](#usage)
-1. [How to handle content](#how-to-handle-content)
+1. [How to handle requests](#how-to-handle-requests)
+    1. [`action` parameter](#action-parameter)
     1. [file on `POST` body](#file-on-post-body)
         1. [`self.request.body_file`](#selfrequestbody_file)
         1. [\(fixed\) Problem with newlines](#fixed-problem-with-newlines)
@@ -34,6 +35,7 @@ De-duplication service (dev notes)
 <a name="key-points"></a>
 # Key points
 
+- Action (report, flag, remove) will be set in the querystring, parameter `action`
 - Content of file must be sent via the `body` of the request
 - Data will be read in streaming
 - Email must be sent in the querystring, parameter `email`
@@ -79,20 +81,20 @@ RESTful API. Flag duplicates in trivial and non-trivial ways:
 1. Trivial: actual duplicates
 1. Non-trivial: potential duplicates, like herbarium duplicates, where locality, date, collector and taxon are the same
 
-The result is the dataset with flags. These flags indicate actual/potential duplicates. Also, add a "reason" field.
+The result is the data set with flags. These flags indicate actual/potential duplicates. Also, add a "reason" field.
 
 Workflow:
 
-1. Submit a dataset
+1. Submit a data set
 1. Depending on the f(x) (or argument/s):
     1. Return a report
-    1. Return the dataset with flags
-    1. Return the dataset with no strict duplicates
-    1. Return the dataset with no duplicates, strict or not
+    1. Return the data set with flags
+    1. Return the data set with no strict duplicates
+    1. Return the data set with no duplicates, strict or not
 
 Add an internal "id" to reference records: "Record id 5 is the same as record id 1".
 
-If dataset has "occurrenceID", use it.
+If data set has "occurrenceID", use it.
 
 First release, no fuzzy matching. Then, think about it for later releases
 
@@ -123,8 +125,21 @@ curl -X POST -H "Content-Type: text/csv" --data-binary @file http://<service_url
 
 
 
-<a name="how-to-handle-content"></a>
-# How to handle content
+<a name="how-to-handle-requests"></a>
+# How to handle requests
+
+<a name="action-parameter"></a>
+## `action` parameter
+
+Initially, I thought I could offer different endpoints, one for each action. But since most of the logic is the same, I now think it makes more sense to offer a single endpoint and determine the action with a parameter. The most logic name for this parameter is `action`.
+
+`action` can be one of those:
+
+* `report` (default): returns a JSON document with duplicate information. Doesn't alter the file in any way
+* `flag`: Adds new flag field/s to the data set indicating which record is duplicate and with reference to the original record
+* `remove`: Returns the data set with all duplicates removed
+
+More can be added as needed.
 
 <a name="file-on-post-body"></a>
 ## file on `POST` body

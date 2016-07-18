@@ -45,6 +45,8 @@ if IS_DEV:
 else:
     QUEUE_NAME = 'dedupes'
 
+_ALLOWED_ACTIONS = ["report", "flag", "remove"]
+
 
 class ReportApi(webapp2.RequestHandler):
     """."""
@@ -93,6 +95,15 @@ class ReportApi(webapp2.RequestHandler):
             }
             self.response.write(json.dumps(resp)+"\n")
             return
+
+        # Determine action ("report" by default)
+        self.action = self.request.get("action", "report")
+        if self.action not in _ALLOWED_ACTIONS:
+            err_explain = "Action %s is not valid. Should be one of: %s" % (
+                self.action, ", ".join(_ALLOWED_ACTIONS))
+            self._err(400, "Action not allowed", err_explain)
+            return
+        logging.info("Action: %s" % self.action)
 
         # Get content from request body
         self.file = self.request.body_file.file
