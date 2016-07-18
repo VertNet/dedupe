@@ -153,24 +153,31 @@ class ReportApi(webapp2.RequestHandler):
             else:
                 memcache.set(k, self.records, namespace=self.request_namespace)
 
-        metadata = {
+        # Build report
+        report = {
             "email": self.email,
             "records": self.records,
             "fields": len(self.headers),
             # "headers": self.headers,
-            "strict_duplicates": self.duplicates
+            # "strict_duplicates": self.duplicates
+        }
+
+        # Build strict_duplicates
+        sd = {
+            "count": self.duplicates
         }
 
         if self.duplicates > 0:
-            metadata["strict_duplicates_indexes"] = list(self.duplicate_order)
-            metadata["strict_duplicates_ids"] = list(self.duplicate_ids)
+            sd["index_pairs"] = list(self.duplicate_order)
+            sd["ids"] = list(self.duplicate_ids)
 
-        # TODO: flush memcache
+        # Add duplicates to report
+        report["strict_duplicates"] = sd
 
         # Return to default namespace
         namespace_manager.set_namespace(self.previous_namespace)
 
         # Build response
-        resp = metadata
+        resp = report
         self.response.write(json.dumps(resp)+"\n")
         return

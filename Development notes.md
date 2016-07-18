@@ -292,9 +292,11 @@ When using the `report` method, users will receive a JSON-like document specifyi
     "email": "Email to send notification to",
     "fields": "Number of fields of the data set",
     "records": "Number of records parsed (with duplicates)",
-    "strict_duplicates": "Number of rows that are exact copies of other rows",
-    "strict_duplicates_indexes": "List consisting of the positions of duplicate record pairs",
-    "strict_duplicates_ids": "List consisting of the IDs of the duplicate rows (only if ID field is provided or can be determined",
+    "strict_duplicates": {
+        "count": "Number of rows that are exact copies of other rows",
+        "ids": "List consisting of the IDs of the duplicate rows (only if ID field is provided or can be determined",
+        "index_pairs": "List consisting of the positions of duplicate record pairs"
+    },
     "To be continued..."
 }
 ```
