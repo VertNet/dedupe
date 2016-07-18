@@ -287,6 +287,10 @@ So, I guess the best option is to:
 1. Repeat until end of file
 1. Let `memcache` items and `namespace` die slow and painfully
 
+
+
+
+
 <a name="how-to-build-the-report"></a>
 # How to build the report
 
@@ -302,6 +306,7 @@ When using the `report` method, users will receive a JSON-like document specifyi
         "ids": "List consisting of the IDs of the duplicate rows (only if ID field is provided or can be determined",
         "index_pairs": "List consisting of the positions of duplicate record pairs"
     },
+    "warnings": "List of warning messages, if any",
     "To be continued..."
 }
 ```

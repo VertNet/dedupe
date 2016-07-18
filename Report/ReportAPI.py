@@ -78,13 +78,20 @@ class ReportApi(webapp2.RequestHandler):
         }
         logging.error(err_message)
         logging.error(err_explain)
+        self.response.headers['Content-Type'] = "application/json"
         self.response.write(json.dumps(resp)+"\n")
+        return
+
+    def get(self):
+        err_message = "Method not allowed"
+        err_explain = "Only POST requests are allowed"
+        self._err(405, err_message, err_explain)
         return
 
     def post(self):
 
-        # Prepare output
-        self.response.headers['Content-Type'] = "application/json"
+        # Initialize warnings
+        self.warnings = []
 
         # Check email exists in parameters
         self.email = self.request.get("email", None)
@@ -164,7 +171,9 @@ class ReportApi(webapp2.RequestHandler):
                 id_field = 'occurrenceid'
             # Otherwise, show warning and don't show "id"-related info
             else:
-                logging.warning("No 'id' field could be reliably determined")
+                warning_msg = "No 'id' field could be determined"
+                self.warnings.append(warning_msg)
+                logging.warning(warning_msg)
                 id_field = None
         # Otherwise, check if field exists in headers
         elif id_field.lower() not in self.headers_lower:
@@ -202,6 +211,10 @@ class ReportApi(webapp2.RequestHandler):
             "fields": len(self.headers),
         }
 
+        # Add warning info
+        if len(self.warnings) > 0:
+            report['warnings'] = self.warnings
+
         # Build strict_duplicates
         sd = {
             "count": self.duplicates
@@ -220,5 +233,6 @@ class ReportApi(webapp2.RequestHandler):
 
         # Build response
         resp = report
+        self.response.headers['Content-Type'] = "application/json"
         self.response.write(json.dumps(resp)+"\n")
         return
