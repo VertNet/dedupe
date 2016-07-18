@@ -149,9 +149,9 @@ class ReportApi(webapp2.RequestHandler):
             if dupe is not None:
                 self.duplicates += 1
                 self.duplicate_ids.add(row[idx])
-                self.duplicate_order.add(self.records)
+                self.duplicate_order.add((dupe, self.records))
             else:
-                memcache.set(k, True, namespace=self.request_namespace)
+                memcache.set(k, self.records, namespace=self.request_namespace)
 
         metadata = {
             "email": self.email,
@@ -162,8 +162,8 @@ class ReportApi(webapp2.RequestHandler):
         }
 
         if self.duplicates > 0:
-            metadata["strict_duplicate_records"] = list(self.duplicate_order)
-            metadata["strict_duplicate_ids"] = list(self.duplicate_ids)
+            metadata["strict_duplicates_indexes"] = list(self.duplicate_order)
+            metadata["strict_duplicates_ids"] = list(self.duplicate_ids)
 
         # TODO: flush memcache
 

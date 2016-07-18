@@ -225,6 +225,8 @@ But what if none is present? Should I throw a warning? Stop with an error? Go ah
 
 So far, I made the API return a 400 error if the field specified as "id" is not among the headers. The only thing left here is to determine what to do when no suitable "id" field is present.
 
+I guess, for now, I will omit the "duplicate ids" field if no "id" field can be properly detected.
+
 
 
 
@@ -283,9 +285,19 @@ So, I guess the best option is to:
 <a name="how-to-build-the-report"></a>
 # How to build the report
 
-Duplicate pairs
+When using the `report` method, users will receive a JSON-like document specifying the duplicates in their records. The document will have the following structure:
 
-
+```json
+{
+    "email": "Email to send notification to",
+    "fields": "Number of fields of the data set",
+    "records": "Number of records parsed (with duplicates)",
+    "strict_duplicates": "Number of rows that are exact copies of other rows",
+    "strict_duplicates_indexes": "List consisting of the positions of duplicate record pairs",
+    "strict_duplicates_ids": "List consisting of the IDs of the duplicate rows (only if ID field is provided or can be determined",
+    "To be continued..."
+}
+```
 
 
 
