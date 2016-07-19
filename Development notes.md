@@ -8,6 +8,7 @@ De-duplication service (dev notes)
 1. [Initial meeting](#initial-meeting)
 1. [Usage](#usage)
 1. [How to handle requests](#how-to-handle-requests)
+    1. [request size](#request-size)
     1. [`action` parameter](#action-parameter)
     1. [file on `POST` body](#file-on-post-body)
         1. [`self.request.body_file`](#selfrequestbody_file)
@@ -22,6 +23,7 @@ De-duplication service (dev notes)
     1. [is datastore better?](#is-datastore-better)
     1. [cleaning up namespaces](#cleaning-up-namespaces)
     1. [Final decision](#final-decision)
+1. [How to detect partial duplicates](#how-to-detect-partial-duplicates)
 1. [How to build the report](#how-to-build-the-report)
 1. [How to deliver results](#how-to-deliver-results)
 
@@ -34,6 +36,7 @@ De-duplication service (dev notes)
 <a name="key-points"></a>
 # Key points
 
+- So far, requests can be 32Mb at most
 - Action (report, flag, remove) will be set in the querystring, parameter `action`
 - Content of file must be sent via the `body` of the request
 - Data will be read in streaming
@@ -43,6 +46,7 @@ De-duplication service (dev notes)
 - `Content-Type` will be used to determine file format, in that order. [See table below](#file-extensions-and-content-type-values) for examples.
 - Each request will operate in its own `namespace`
 - Full duplicates will be checked with `md5` hashes
+- Default fields for partial duplicates will be: `locality`, `recordedBy`, `eventDate` and `scientificName`
 
 
 
@@ -117,6 +121,11 @@ curl -X POST -H "Content-Type: text/csv" --data-binary @file http://<service_url
 
 <a name="how-to-handle-requests"></a>
 # How to handle requests
+
+<a name="request-size"></a>
+## request size
+
+[According to the docs](https://cloud.google.com/appengine/docs/python/how-requests-are-handled#Python_Quotas_and_limits), there is a 32Mb limit on request size
 
 <a name="action-parameter"></a>
 ## `action` parameter
@@ -286,6 +295,27 @@ So, I guess the best option is to:
     1. If not, add line hash to `memcache`
 1. Repeat until end of file
 1. Let `memcache` items and `namespace` die slow and painfully
+
+
+
+
+
+<a name="how-to-detect-partial-duplicates"></a>
+# How to detect partial duplicates
+
+As Rob suggested, we also need to provide the way of detecting partial duplicates. These will be determined based on four criteria:
+
+* Same locality information
+* Same date information
+* Same taxonomic information
+* Same collector information
+
+The standard fields for those data are, respectively, `locality`, `eventDate`, `scientificName` and `recordedBy`.
+
+However, in order to provide as much flexibility as possible, we could let users add a list of the fields that will form a duplicate. I see two options:
+
+1. Provide individual arguments for each of the four elements
+1. Provide a single argument to be filled with a list of one or more fields
 
 
 

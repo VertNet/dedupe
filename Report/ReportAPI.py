@@ -47,6 +47,10 @@ else:
 
 _ALLOWED_ACTIONS = ["report", "flag", "remove"]
 _ALLOWED_TYPES = ["text/csv", "text/tab-separated-values"]
+_LOC = "locality"
+_SCI = "scientificName"
+_COL = "recordedBy"
+_DAT = "eventDate"
 
 
 class ReportApi(webapp2.RequestHandler):
@@ -154,10 +158,18 @@ class ReportApi(webapp2.RequestHandler):
             self._err(400, "Wrong 'Content-Type' header", err_explain)
             return
 
+        # Get positions for partial duplicates
+        loc = self.headers_lower.index(_LOC.lower())
+        sci = self.headers_lower.index(_SCI.lower())
+        col = self.headers_lower.index(_COL.lower())
+        dat = self.headers_lower.index(_DAT.lower())
+
         # Initialize report values
         self.records = 0
         self.duplicates = 0
         self.duplicate_order = set()
+        self.partial_duplicates = 0
+        self.partial_duplicates_order = set()
 
         # Check "id" parameter
         id_field = self.request.get("id", None)
@@ -186,14 +198,15 @@ class ReportApi(webapp2.RequestHandler):
             logging.info("Using %s as 'id' field" % id_field)
             logging.info("'id' field in position %s" % idx)
             self.duplicate_ids = set()
+            self.partial_duplicate_ids = set()
 
         # Parse records
         for row in reader:
             self.records += 1
 
+            # Strict duplicates
             # Calculate md5 hash
             k = hashlib.md5(str(row)).hexdigest()
-
             # Check if hash exists in memcache
             dupe = memcache.get(k, namespace=self.request_namespace)
             if dupe is not None:
@@ -202,7 +215,21 @@ class ReportApi(webapp2.RequestHandler):
                 if id_field is not None:
                     self.duplicate_ids.add(row[idx])
             else:
+                # Add key to memcache
                 memcache.set(k, self.records, namespace=self.request_namespace)
+                # look for partial dupe
+                # Build id string
+                pk = "|".join([row[loc], row[sci], row[col], row[dat]])
+                # Check if key exists in memcache
+                pdupe = memcache.get(pk, namespace=self.request_namespace)
+                if pdupe is not None:
+                    self.partial_duplicates += 1
+                    self.partial_duplicates_order.add((pdupe, self.records))
+                    if id_field is not None:
+                        self.partial_duplicate_ids.add(row[idx])
+                else:
+                    memcache.set(pk, self.records,
+                                 namespace=self.request_namespace)
 
         # Build report
         report = {
@@ -227,6 +254,19 @@ class ReportApi(webapp2.RequestHandler):
 
         # Add duplicates to report
         report["strict_duplicates"] = sd
+
+        # Build partial_duplicates
+        pd = {
+            "count": self.partial_duplicates
+        }
+
+        if self.partial_duplicates > 0:
+            pd["index_pairs"] = list(self.partial_duplicates_order)
+            if id_field is not None:
+                pd["ids"] = list(self.partial_duplicate_ids)
+
+        # Add partial duplicates to report
+        report["partial_duplicates"] = pd
 
         # Return to default namespace
         namespace_manager.set_namespace(self.previous_namespace)
