@@ -16,11 +16,11 @@
 ###
 
 # CODEBASE INFO
-# Last pushed to master branch: 07/18/2016
-# Last change to master branch: Initial
+# Last pushed to master branch: 07/19/2016
+# Last change to master branch: Strict and Partial Dupes
 #
 # DEPLOYMENT INFO
-# Last deployed dev version: 07/18/2016 (initialize)
+# Last deployed dev version: 07/19/2016 (Strict and Partial Dupes)
 # Last deployed prod version: 
 # command: gcloud preview app deploy dedupe.yaml
 # args:
