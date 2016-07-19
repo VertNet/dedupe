@@ -59,9 +59,9 @@ De-duplication service (dev notes)
 |--------|----------------|---------------|
 | CSV | `.csv` | `text/csv` |
 | Tab separated | `.txt` or `tsv` | `text/tab-separated-values` |
-| DarwinCore Archive | `.zip` | `application/zip` |
-| DarwinCore Archive (preferred) | `.zip` | `application/x-dwca` |
-| JSON | `.json` | `application/json` |
+| DarwinCore Archive (not yet implemented) | `.zip` | `application/zip` |
+| DarwinCore Archive (preferred, not yet implemented) | `.zip` | `application/x-dwca` |
+| JSON (not yet implemented) | `.json` | `application/json` |
 
 
 

@@ -22,6 +22,15 @@ echo ""
 test/test_dev_id_field.sh
 
 echo ""
+echo "---------------------------"
+echo "Checking partial duplicates"
+echo "---------------------------"
+echo ""
+echo ""
+
+test/test_dev_partial_dupes.sh
+
+echo ""
 echo "=================="
 echo "All tests finished"
 echo "=================="
