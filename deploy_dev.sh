@@ -1,0 +1,1 @@
+gcloud app deploy dedupe.yaml --project vertnet-portal --version dev --no-promote

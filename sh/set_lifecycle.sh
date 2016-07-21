@@ -1,0 +1,1 @@
+gsutil lifecycle set ./lifecycle.json gs://vn-dedupe

@@ -1,0 +1,1 @@
+gsutil lifecycle get gs://vn-dedupe

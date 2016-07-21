@@ -29,7 +29,7 @@
 #   --promote  # Optional, removes the version id from the deployment URL. Skip for testing and/or dev version
 #
 # TODO:
-#   - Everything
+#   - Implement "remote" and "flag" actions
 
 service: dedupe
 runtime: python27

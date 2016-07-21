@@ -4,3 +4,6 @@
 
 # Data folder
 data/
+
+# External libs
+lib/

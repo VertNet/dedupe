@@ -26,6 +26,7 @@ De-duplication service (dev notes)
 1. [How to detect partial duplicates](#how-to-detect-partial-duplicates)
 1. [How to build the report](#how-to-build-the-report)
 1. [How to deliver results](#how-to-deliver-results)
+    1. [Google Cloud Storage](#google-cloud-storage)
 
 <!-- /MarkdownTOC -->
 
@@ -347,3 +348,31 @@ When using the `report` method, users will receive a JSON-like document specifyi
 # How to deliver results
 
 Sometimes, it might take longer than the 60 second limit to return results. Maybe I can add a `try-catch` block to check for `DeadlineExceededError` and, if so, launch a task to continue working. In any case, the user should provide a notification email to be able to receive the results.
+
+Also, while building and giving the data back to the users in real time is a good option, I think it is a better idea to start storing the generated dataset in Cloud Storage and providing a link to the email address in the `email` parameter. Here's how I'm doing it:
+
+<a name="google-cloud-storage"></a>
+## Google Cloud Storage
+
+GCS is not included in the default App Engine distro, so we need to download the client and load it in the packages. To do that, first "install" the module:
+
+```bash
+pip install GoogleAppEngineCloudStorageClient -t ./lib
+```
+
+Before the importing can be made effective, we need a way to tell GAE where to find the `cloudstorage` package. Editing `appengine_config.py`.
+
+```py
+# appengine_config.py
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
+```
+
+And now we can safely add the following `import` statement in the code
+
+```py
+import cloudstorage as gcs
+```
+
+I have created the `vn-dedupe` bucket. We add that as the default bucket. Also, I have configured the bucket to automatically remove all files older than 1 day.

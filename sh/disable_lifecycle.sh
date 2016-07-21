@@ -1,0 +1,1 @@
+gsutil lifecycle set no_lifecycle.json gs://vn-dedupe
