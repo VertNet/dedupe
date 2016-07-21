@@ -16,11 +16,11 @@
 ###
 
 # CODEBASE INFO
-# Last pushed to master branch: 07/19/2016
-# Last change to master branch: Strict and Partial Dupes
+# Last pushed to master branch: 07/21/2016
+# Last change to master branch: GCS storage and email with link
 #
 # DEPLOYMENT INFO
-# Last deployed dev version: 07/19/2016 (Strict and Partial Dupes)
+# Last deployed dev version: 07/21/2016 (GCS storage and email with link)
 # Last deployed prod version: 
 # command: gcloud preview app deploy dedupe.yaml
 # args:
@@ -29,7 +29,12 @@
 #   --promote  # Optional, removes the version id from the deployment URL. Skip for testing and/or dev version
 #
 # TODO:
-#   - Implement "remote" and "flag" actions
+#   - Implement "flag" action
+#   - Build README
+#   - Build front-end form
+#   - Add support for DWCAs
+#   - Test on python with urllib and requests
+#   - Test on R
 
 service: dedupe
 runtime: python27
