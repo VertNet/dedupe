@@ -19,16 +19,14 @@ This method generates a report informing of potential duplicates in the
 provided data set. It does not add any flagging field nor deletes the potential
 duplicated records.
 
-TODO: add documentation on usage
+TODO: add documentation on usage here
 
 """
 
 import csv
 import json
 import uuid
-# import hashlib
 import logging
-# from StringIO import StringIO
 
 from google.appengine.api import namespace_manager, taskqueue
 import cloudstorage as gcs
@@ -55,7 +53,7 @@ Instance attributes:
                  for strict duplicates
 - duplicate_order: position of the original-duplicate pair of records,
                  for strict duplicates
-- duplicates: number of strict duplicates found
+- duplicates: List with types of duplicates to find (strict, partial, all...)
 - email: email address to send notifications to
 - extension: file extension (.txt for tab-delimited, .csv for comma-separated)
 - file: file-object sent by the user in the POST body
@@ -79,6 +77,7 @@ Instance attributes:
 - report: final report to be delivered to the user
 - request_namespace: Namespace for the current request
 - sci: position of the "scientificName" field in the file
+- strict_duplicates: number of strict duplicates found
 - user_agent: User-Agent header of the request
 - warnings: list conaining all warnings generated during the process
 """
@@ -160,6 +159,21 @@ Instance attributes:
             return
         logging.info("Action: %s" % self.action)
 
+        # Determine duplicate types to be checked ("all" by default)
+        self.duplicates = self.request.get("duplicates", "all")
+        if self.duplicates not in ALLOWED_DUPLICATES:
+            err_explain = "Value of 'duplicates' parameter %s is not valid."
+            err_explain += " Should be one of: %s"
+            err_explain = err_explain % (
+                self.duplicates, ", ".join(ALLOWED_DUPLICATES)
+            )
+            self._err(400, "Duplicate detection type not allowed", err_explain)
+            return
+
+        # Transform "all" in list of elements for duplicate types
+        if self.duplicates == "all":
+            self.duplicates = [x for x in ALLOWED_DUPLICATES if x is not "all"]
+
         # Get content from request body
         self.body_file = self.request.body_file
         self.file = self.body_file.file
@@ -226,6 +240,7 @@ Instance attributes:
             "delimiter": self.delimiter,
             "extension": self.extension,
             "action": self.action,
+            "duplicates": self.duplicates,
             "file_path": self.file_path,
             "file_name": self.file_name,
             "headers": self.headers,

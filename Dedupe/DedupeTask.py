@@ -53,7 +53,7 @@ Instance attributes:
                  for strict duplicates
 - duplicate_order: position of the original-duplicate pair of records,
                  for strict duplicates
-- duplicates: number of strict duplicates found
+- duplicates: List with types of duplicates to find (strict, partial, all...)
 - email: email address to send notifications to
 - extension: file extension (.txt for tab-delimited, .csv for comma-separated)
 - file: file-object sent by the user in the POST body
@@ -77,11 +77,13 @@ Instance attributes:
 - report: final report to be delivered to the user
 - request_namespace: Namespace for the current request
 - sci: position of the "scientificName" field in the file
+- strict_duplicates: number of strict duplicates found
 - user_agent: User-Agent header of the request
 - warnings: list conaining all warnings generated during the process
 """
 
     def _err(self, err_code=500, err_message="", err_explain=""):
+        """Return a custom error message along with the error code."""
         self.error(err_code)
         resp = {
             "status": "error",
@@ -94,7 +96,74 @@ Instance attributes:
         self.response.write(json.dumps(resp)+"\n")
         return
 
+    def check_strict_dupes(self, row):
+        """Check if the provided record is a strict duplicate of a previous
+one."""
+        # Calculate md5 hash
+        k = hashlib.md5(str(row)).hexdigest()
+        # Check if hash exists in memcache
+        dupe = memcache.get(k, namespace=self.request_namespace)
+        # If exists, STRICT_DUPE
+        if dupe is not None:
+            self.is_dupe = STRICT_DUPE
+            self.strict_duplicates += 1
+            self.duplicate_order.add((dupe, self.records))
+            if self.id_field is not None:
+                self.duplicate_ids.add(row[self.idx])
+            return 1
+        # Otherwise, store key in memcache
+        else:
+            memcache.set(k, self.records, namespace=self.request_namespace)
+            return 0
+
+    def check_partial_dupes(self, row):
+        """Check if the provided record is a partial duplicate of a previous
+one."""
+        # Build id string
+        pk = "|".join([row[self.loc], row[self.sci],
+                       row[self.col], row[self.dat]])
+        # Check if key exists in memcache
+        pdupe = memcache.get(pk, namespace=self.request_namespace)
+        # If exists, PARTIAL_DUPE
+        if pdupe is not None:
+            self.is_dupe = PARTIAL_DUPE
+            self.partial_duplicates += 1
+            self.partial_duplicates_order.add((pdupe, self.records))
+            if self.id_field is not None:
+                self.partial_duplicate_ids.add(row[self.idx])
+            return 1
+        # Otherwise, store key in memcache
+        else:
+            memcache.set(pk, self.records,
+                         namespace=self.request_namespace)
+            return 0
+
+    def handle_row(self, row):
+        """Handle row according to check result and action type:
+- No duplicate and action is remove or flag: write row
+- Duplicate and action is remove: skip writing row
+- Duplicate and action is flag: update record and write row
+"""
+
+        # If no duplicate, write row
+        if self.action != "report" and self.is_dupe == NO_DUPE:
+            try:  # Workaround to handle proper conversion
+                si = StringIO()
+                cw = csv.writer(si, delimiter=self.delimiter)
+                cw.writerow(row)
+                self.f.write(si.getvalue())
+                logging.info("Wrote line in %s" % self.file_name)
+            except Exception, e:
+                logging.error("Something went wrong writing a row\n"
+                              "f: %s\nrow: %s\nerror: %s" %
+                              (self.file_name, row, e))
+
+        # If duplicate and action="flag", add flag
+        if self.action == "flag" and self.is_dupe != NO_DUPE:
+            pass  # TODO: implement "flag" action
+
     def post(self):
+        """Main function. Parse the file for duplicates."""
 
         # Initialize variables from request
         self.email = self.request.get("email", None)
@@ -105,6 +174,7 @@ Instance attributes:
         self.delimiter = str(self.request.get("delimiter", None))
         self.extension = self.request.get("extension", None)
         self.action = self.request.get("action", None)
+        self.duplicates = self.request.get("duplicates", None)
         self.file_path = str(self.request.get("file_path", None))
         self.file_name = str(self.request.get("file_name", None))
         self.headers = self.request.get("headers", None)
@@ -128,7 +198,7 @@ Instance attributes:
 
         # Initialize report values
         self.records = 0
-        self.duplicates = 0
+        self.strict_duplicates = 0
         self.duplicate_order = set()
         self.partial_duplicates = 0
         self.partial_duplicates_order = set()
@@ -161,58 +231,20 @@ Instance attributes:
             self.records += 1
             self.is_dupe = NO_DUPE
 
-            # Strict duplicates
-            # Calculate md5 hash
-            k = hashlib.md5(str(row)).hexdigest()
-            # Check if hash exists in memcache
-            dupe = memcache.get(k, namespace=self.request_namespace)
-            if dupe is not None:
-                self.is_dupe = STRICT_DUPE
-                self.duplicates += 1
-                self.duplicate_order.add((dupe, self.records))
-                if self.id_field is not None:
-                    self.duplicate_ids.add(row[self.idx])
-            else:
-                # Add key to memcache
-                memcache.set(k, self.records, namespace=self.request_namespace)
-                # look for partial dupe
-                # Build id string
-                pk = "|".join([row[self.loc], row[self.sci],
-                               row[self.col], row[self.dat]])
-                # Check if key exists in memcache
-                pdupe = memcache.get(pk, namespace=self.request_namespace)
-                if pdupe is not None:
-                    self.is_dupe = PARTIAL_DUPE
-                    self.partial_duplicates += 1
-                    self.partial_duplicates_order.add((pdupe, self.records))
-                    if self.id_field is not None:
-                        self.partial_duplicate_ids.add(row[self.idx])
-                else:
-                    memcache.set(pk, self.records,
-                                 namespace=self.request_namespace)
+            # Check for strict duplicates
+            if "strict" in self.duplicates and self.is_dupe == NO_DUPE:
+                self.check_strict_dupes(row)
 
-            if self.action != "report":
-                # Write row if no duplicate
-                if self.is_dupe == 0:
-                    try:
-                        # Workaround to handle proper conversion
-                        si = StringIO()
-                        cw = csv.writer(si, delimiter=self.delimiter)
-                        cw.writerow(row)
-                        self.f.write(si.getvalue())
-                        # self.f.write(row)
-                        logging.info("Wrote line in %s" % self.file_name)
-                    except Exception, e:
-                        logging.error("Something went wrong writing a row\n"
-                                      "f: %s\nrow: %s\nerror: %s" %
-                                      (self.file_name, row, e))
-                # Write row with flag if action="flag"
-                elif self.action == "flag":
-                    # TODO
-                    logging.warning("Should have written row %s here"
-                                    % self.record)
+            # Check for partial duplicates
+            if "partial" in self.duplicates and self.is_dupe == NO_DUPE:
+                self.check_partial_dupes(row)
 
-        # Close file
+            # More type of duplicates will be added here
+
+            # Handle row according to check result and action type
+            self.handle_row(row)
+
+        # Close file when finished parsing records
         if self.action != "report":
             try:
                 self.f.close()
@@ -236,10 +268,10 @@ Instance attributes:
 
         # Build strict_duplicates
         sd = {
-            "count": self.duplicates
+            "count": self.strict_duplicates
         }
 
-        if self.duplicates > 0:
+        if self.strict_duplicates > 0:
             sd["index_pairs"] = list(self.duplicate_order)
             if self.id_field is not None:
                 sd["ids"] = list(self.duplicate_ids)
@@ -269,49 +301,16 @@ Instance attributes:
 
             # Build explanation note for email
             if self.action == "flag":
-                action_description = """
-Since you selected the "flag" option, the system has added some new fields to
-the dataset you provided. <field explanation here>.
-"""
+                action_description = ACTION_FLAG
             elif self.action == "remove":
-                action_description = """
-Since you selected the "remove" option, the system has deleted the duplicate
-rows, so you should see the dataset has now fewer records. Please check out the
-report below to find more information about the removed records.
-"""
-            subject = "Your de-duplicated file is ready"
+                action_description = ACTION_REMOVE
+            subject = EMAIL_SUBJECT
             sender = EMAIL_SENDER
             to = self.email
-            body = """Hello,
-
-This is a notification email to inform you that the file you sent to the
-VertNet de-duplication API is ready and available for download here (link
-available for 24h):
-
-{}
-{}
-
-Finally, this is what the system has gathered from the de-duplication system:
-
-<pre>
-{}
-</pre>
-
-You can find more information on the de-duplication system here:
-
-https://www.github.com/VertNet/dedupe
-
-If you find any issue or complain, please report it here:
-
-https://www.github.com/VertNet/dedupe/issues
-
-Thank you for using our services. Best wishes,
-The VertNet Team
-http://www.vertnet.org
-""".format(self.file_url, action_description, json.dumps(self.report,
-                                                         sort_keys=True,
-                                                         indent=4))
-
+            body = EMAIL_BODY.format(
+                self.file_url,
+                action_description,
+                json.dumps(self.report, sort_keys=True, indent=4))
             mail.send_mail(sender=sender, to=to, subject=subject, body=body)
 
         # Return to default namespace
