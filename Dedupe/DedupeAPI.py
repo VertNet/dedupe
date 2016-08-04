@@ -170,10 +170,6 @@ Instance attributes:
             self._err(400, "Duplicate detection type not allowed", err_explain)
             return
 
-        # Transform "all" in list of elements for duplicate types
-        if self.duplicates == "all":
-            self.duplicates = [x for x in ALLOWED_DUPLICATES if x is not "all"]
-
         # Get content from request body
         self.body_file = self.request.body_file
         self.file = self.body_file.file
@@ -243,8 +239,7 @@ Instance attributes:
             "duplicates": self.duplicates,
             "file_path": self.file_path,
             "file_name": self.file_name,
-            "headers": self.headers,
-            "headers_lower": self.headers_lower,
+            "headers": json.dumps(self.headers),
             "loc": self.loc,
             "sci": self.sci,
             "dat": self.dat,

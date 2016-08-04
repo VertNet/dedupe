@@ -177,8 +177,8 @@ one."""
         self.duplicates = self.request.get("duplicates", None)
         self.file_path = str(self.request.get("file_path", None))
         self.file_name = str(self.request.get("file_name", None))
-        self.headers = self.request.get("headers", None)
-        self.headers_lower = self.request.get("headers_lower", None)
+        self.headers = json.loads(self.request.get("headers", None))
+        self.headers_lower = [x.lower() for x in self.headers]
         self.loc = int(self.request.get("loc", None))
         self.sci = int(self.request.get("sci", None))
         self.dat = int(self.request.get("dat", None))
@@ -188,6 +188,10 @@ one."""
         # Switch to request namespace
         namespace_manager.set_namespace(self.request_namespace)
         logging.info("Switched to namespace %s" % self.request_namespace)
+
+        # Transform "all" in list of elements for duplicate types
+        if self.duplicates == "all":
+            self.duplicates = [x for x in ALLOWED_DUPLICATES if x is not "all"]
 
         # Get file from GCS
         self.file = gcs.open(self.file_name)
@@ -219,7 +223,7 @@ one."""
                 self.f = gcs.open(self.file_name, 'w',
                                   content_type=self.content_type)
                 logging.info("Created GCS file in %s" % self.file_name)
-                self.f.write(self.delimiter.join(self.headers))
+                self.f.write(str(self.delimiter.join(self.headers)))
                 self.f.write("\n")
                 logging.info("Successfully wrote headers in file")
             except Exception, e:
