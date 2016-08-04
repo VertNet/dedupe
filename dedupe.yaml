@@ -16,12 +16,14 @@
 ###
 
 # CODEBASE INFO
-# Last pushed to master branch: 07/21/2016
-# Last change to master branch: GCS storage and email with link
+# Last pushed to master branch: 08/04/2016
+# Last commit to master branch: 0f658f74c9fd58c42cecfd3433c202c1cacd56f5
 #
 # DEPLOYMENT INFO
-# Last deployed dev version: 07/21/2016 (GCS storage and email with link)
+# Last deployed dev version: 08/04/2016
+# Last commit on dev version: 0f658f74c9fd58c42cecfd3433c202c1cacd56f5
 # Last deployed prod version: 
+# Last commit on prod verson: 
 # command: gcloud preview app deploy dedupe.yaml
 # args:
 #   --project vertnet-portal  # Optional, no need if gcloud is configured to use this project
