@@ -25,10 +25,8 @@ Usage:
 
 """
 
-import os
 import csv
 import json
-import uuid
 import hashlib
 import logging
 from StringIO import StringIO
@@ -37,30 +35,10 @@ from google.appengine.api import namespace_manager, memcache, mail
 import cloudstorage as gcs
 import webapp2
 
-LAST_UPDATED = ''
-REPORT_VERSION = ''
-
-IS_DEV = os.environ.get('SERVER_SOFTWARE', '').startswith('Development')
-
-if IS_DEV:
-    QUEUE_NAME = 'default'
-else:
-    QUEUE_NAME = 'dedupes'
-
-_ALLOWED_ACTIONS = ["report", "flag", "remove"]
-_ALLOWED_TYPES = ["text/csv", "text/tab-separated-values"]
-_LOC = "locality"
-_SCI = "scientificName"
-_COL = "recordedBy"
-_DAT = "eventDate"
-_BUCKET = "vn-dedupe"
-_NO_DUPE = 0
-_STRICT_DUPE = 1
-_PARTIAL_DUPE = 2
-_EMAIL_SENDER = "VertNet Tools - De-duplication <javier.otegui@gmail.com>"
+from config import *
 
 
-class ReportApi(webapp2.RequestHandler):
+class DedupeTask(webapp2.RequestHandler):
     """
 Instance attributes:
 
@@ -102,23 +80,6 @@ Instance attributes:
 - user_agent: User-Agent header of the request
 - warnings: list conaining all warnings generated during the process
 """
-    def __init__(self, request, response):
-
-        # Get request headers
-        self.cityLatLong = request.headers.get('X-AppEngine-CityLatLong')
-        self.country = request.headers.get('X-AppEngine-Country')
-        self.user_agent = request.headers.get('User-Agent')
-
-        # Handle namespace for this request
-        self.previous_namespace = namespace_manager.get_namespace()
-        self.request_namespace = str(uuid.uuid4())
-        namespace_manager.set_namespace(self.request_namespace)
-        logging.info("Switched to namespace %s" % self.request_namespace)
-
-        # Initialize response
-        logging.info('Initializing Report with headers %s' % request.headers)
-        self.initialize(request, response)
-        return
 
     def _err(self, err_code=500, err_message="", err_explain=""):
         self.error(err_code)
@@ -133,85 +94,37 @@ Instance attributes:
         self.response.write(json.dumps(resp)+"\n")
         return
 
-    def get(self):
-        err_message = "Method not allowed"
-        err_explain = "Only POST requests are allowed"
-        self._err(405, err_message, err_explain)
-        return
-
     def post(self):
+
+        # Initialize variables from request
+        self.email = self.request.get("email", None)
+        self.request_namespace = self.request.get("request_namespace", None)
+        self.request_namespace = str(self.request_namespace)
+        self.previous_namespace = self.request.get("previous_namespace", None)
+        self.content_type = self.request.get("content_type", None)
+        self.delimiter = str(self.request.get("delimiter", None))
+        self.extension = self.request.get("extension", None)
+        self.action = self.request.get("action", None)
+        self.file_path = str(self.request.get("file_path", None))
+        self.file_name = str(self.request.get("file_name", None))
+        self.headers = self.request.get("headers", None)
+        self.headers_lower = self.request.get("headers_lower", None)
+        self.loc = int(self.request.get("loc", None))
+        self.sci = int(self.request.get("sci", None))
+        self.dat = int(self.request.get("dat", None))
+        self.col = int(self.request.get("col", None))
+        self.id_field = self.request.get("id_field", None)
+
+        # Switch to request namespace
+        namespace_manager.set_namespace(self.request_namespace)
+        logging.info("Switched to namespace %s" % self.request_namespace)
+
+        # Get file from GCS
+        self.file = gcs.open(self.file_name)
+        self.reader = csv.reader(self.file, delimiter=self.delimiter)
 
         # Initialize warnings
         self.warnings = []
-
-        # Check email exists in parameters
-        self.email = self.request.get("email", None)
-        if self.email is None:
-            self.error(400)
-            err_message = "Please provide an email address"
-            logging.error(err_message)
-            resp = {
-                "status": "error",
-                "error": err_message
-            }
-            self.response.write(json.dumps(resp)+"\n")
-            return
-
-        # Determine file format via 'Content-Type'
-        self.content_type = self.request.headers['Content-Type']
-        logging.info("Content-Type: %s" % self.content_type)
-
-        if self.content_type == "application/x-www-form-urlencoded":
-            err_explain = "'Content-Type' is a required header for the" \
-                          " proper working of the API." \
-                          " Please read the documentation for examples on" \
-                          " how to set this parameter"
-            self._err(400, "No 'Content-Type' was provided", err_explain)
-            return
-
-        # Establish field separator based on Content-Type
-        if self.content_type == "text/csv":
-            self.delimiter = ","
-            self.extension = ".csv"
-        elif self.content_type == "text/tab-separated-values":
-            self.delimiter = "\t"
-            self.extension = ".txt"
-        else:
-            err_explain = "The value of 'Content-Type' is not among the" \
-                          " accepted values for this header. Should be one" \
-                          " of: %s" % ", ".join(_ALLOWED_TYPES)
-            self._err(400, "Wrong 'Content-Type' header", err_explain)
-            return
-
-        # Determine action ("report" by default)
-        self.action = self.request.get("action", "report")
-        if self.action not in _ALLOWED_ACTIONS:
-            err_explain = "Action %s is not valid. Should be one of: %s" % (
-                self.action, ", ".join(_ALLOWED_ACTIONS))
-            self._err(400, "Action not allowed", err_explain)
-            return
-        logging.info("Action: %s" % self.action)
-
-        # Get content from request body
-        self.file = self.request.body_file.file
-
-        # Initialize parsing
-        self.reader = csv.reader(self.file, delimiter=self.delimiter)
-        self.headers = self.reader.next()
-        self.headers_lower = [x.lower() for x in self.headers]
-
-        # Check if proper field delimiter
-        if len(self.headers) == 1:
-            err_explain = "The system ended up with 1-field rows. Please" \
-                          " check the 'Content-Type' parameter"
-            self._err(400, "Wrong 'Content-Type' header", err_explain)
-            return
-
-        # Get positions for partial duplicates
-        self.loc = self.headers_lower.index(_LOC.lower())
-        self.sci = self.headers_lower.index(_SCI.lower())
-        self.col = self.headers_lower.index(_COL.lower())
-        self.dat = self.headers_lower.index(_DAT.lower())
 
         # Initialize report values
         self.records = 0
@@ -219,27 +132,6 @@ Instance attributes:
         self.duplicate_order = set()
         self.partial_duplicates = 0
         self.partial_duplicates_order = set()
-
-        # Check "id" parameter
-        self.id_field = self.request.get("id", None)
-        # If not given
-        if self.id_field is None:
-            # Find "id" field
-            if 'id' in self.headers_lower:
-                self.id_field = 'id'
-            # Otherwise find "occurrenceid" field
-            elif 'occurrenceid' in self.headers_lower:
-                self.id_field = 'occurrenceid'
-            # Otherwise, show warning and don't show "id"-related info
-            else:
-                warning_msg = "No 'id' field could be determined"
-                self.warnings.append(warning_msg)
-                logging.warning(warning_msg)
-                self.id_field = None
-        # Otherwise, check if field exists in headers
-        elif self.id_field.lower() not in self.headers_lower:
-            self._err(400, "Couldn't find field '%s'" % self.id_field)
-            return
 
         # Calculating "id" field position, if exists
         if self.id_field is not None:
@@ -249,14 +141,14 @@ Instance attributes:
             self.duplicate_ids = set()
             self.partial_duplicate_ids = set()
 
-        # Open file in GCS
+        # Create response file in GCS
         if self.action != "report":
-            self.file_name = "/".join(["", _BUCKET, self.request_namespace])
-            self.file_name = self.file_name + self.extension
+            self.file_name = "/".join(["", BUCKET, self.request_namespace])
+            self.file_name = "%s/modif.%s" % (self.file_path, self.extension)
             try:
                 self.f = gcs.open(self.file_name, 'w',
                                   content_type=self.content_type)
-                logging.info("Open GCS file in %s" % self.file_name)
+                logging.info("Created GCS file in %s" % self.file_name)
                 self.f.write(self.delimiter.join(self.headers))
                 self.f.write("\n")
                 logging.info("Successfully wrote headers in file")
@@ -267,7 +159,7 @@ Instance attributes:
         # Parse records
         for row in self.reader:
             self.records += 1
-            self.is_dupe = _NO_DUPE
+            self.is_dupe = NO_DUPE
 
             # Strict duplicates
             # Calculate md5 hash
@@ -275,7 +167,7 @@ Instance attributes:
             # Check if hash exists in memcache
             dupe = memcache.get(k, namespace=self.request_namespace)
             if dupe is not None:
-                self.is_dupe = _STRICT_DUPE
+                self.is_dupe = STRICT_DUPE
                 self.duplicates += 1
                 self.duplicate_order.add((dupe, self.records))
                 if self.id_field is not None:
@@ -290,7 +182,7 @@ Instance attributes:
                 # Check if key exists in memcache
                 pdupe = memcache.get(pk, namespace=self.request_namespace)
                 if pdupe is not None:
-                    self.is_dupe = _PARTIAL_DUPE
+                    self.is_dupe = PARTIAL_DUPE
                     self.partial_duplicates += 1
                     self.partial_duplicates_order.add((pdupe, self.records))
                     if self.id_field is not None:
@@ -388,7 +280,7 @@ rows, so you should see the dataset has now fewer records. Please check out the
 report below to find more information about the removed records.
 """
             subject = "Your de-duplicated file is ready"
-            sender = _EMAIL_SENDER
+            sender = EMAIL_SENDER
             to = self.email
             body = """Hello,
 
@@ -401,7 +293,9 @@ available for 24h):
 
 Finally, this is what the system has gathered from the de-duplication system:
 
+<pre>
 {}
+</pre>
 
 You can find more information on the de-duplication system here:
 

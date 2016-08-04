@@ -1,4 +1,4 @@
-# This file is part of VertNet: https://github.com/VertNet/webapp
+# This file is part of VertNet: https://github.com/VertNet/dedupe
 #
 # VertNet is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,22 +13,24 @@
 # You should have received a copy of the GNU General Public License
 # along with VertNet.  If not, see: http://www.gnu.org/licenses
 
-"""API method and service routing."""
+import os
 
-import webapp2
+IS_DEV = os.environ.get('SERVER_SOFTWARE', '').startswith('Development')
 
-# API methods
-from Dedupe.DedupeAPI import DedupeApi
-from Dedupe.DedupeTask import DedupeTask
+if IS_DEV:
+    QUEUE_NAME = 'default'
+else:
+    QUEUE_NAME = 'dedupe'
 
-LAST_UPDATED = ''
-
-routes = [
-    # API methods, v1 (2016-05-20T12:37:29+CEST)
-    webapp2.Route(r'/api/v0/dedupe', handler=DedupeApi),
-
-    # Background service
-    webapp2.Route(r'/service/v0/dedupe', handler=DedupeTask)
-]
-
-handlers = webapp2.WSGIApplication(routes, debug=True)
+TASKURL = "/service/v0/dedupe"
+ALLOWED_ACTIONS = ["report", "flag", "remove"]
+ALLOWED_TYPES = ["text/csv", "text/tab-separated-values"]
+LOC = "locality"
+SCI = "scientificName"
+COL = "recordedBy"
+DAT = "eventDate"
+BUCKET = "vn-dedupe"
+NO_DUPE = 0
+STRICT_DUPE = 1
+PARTIAL_DUPE = 2
+EMAIL_SENDER = "VertNet Tools - De-duplication <javier.otegui@gmail.com>"

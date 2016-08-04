@@ -43,9 +43,8 @@ threadsafe: yes
 
 handlers:
 
-- url: /api/v0/*.*
+- url: .*
   script: dedupe.handlers
-
 
 libraries:
 - name: webapp2
