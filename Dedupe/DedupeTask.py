@@ -152,7 +152,7 @@ one."""
                 cw = csv.writer(si, delimiter=self.delimiter)
                 cw.writerow(row)
                 self.f.write(si.getvalue())
-                logging.info("Wrote line in %s" % self.file_name)
+                # logging.info("Wrote line in %s" % self.file_name)
             except Exception, e:
                 logging.error("Something went wrong writing a row\n"
                               "f: %s\nrow: %s\nerror: %s" %

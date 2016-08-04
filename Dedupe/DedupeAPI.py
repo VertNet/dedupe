@@ -123,6 +123,7 @@ Instance attributes:
         if self.email is None:
             self._err(400, "Please provide an email address")
             return
+        logging.info("Results will be sent to %s" % self.email)
 
         # Determine file format via 'Content-Type'
         self.content_type = self.request.headers['Content-Type']
@@ -169,6 +170,7 @@ Instance attributes:
             )
             self._err(400, "Duplicate detection type not allowed", err_explain)
             return
+        logging.info("Looking for %s duplicates" % self.duplicates)
 
         # Get content from request body
         self.body_file = self.request.body_file
