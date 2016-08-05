@@ -30,6 +30,7 @@ import json
 import hashlib
 import logging
 from StringIO import StringIO
+from datetime import datetime
 
 from google.appengine.api import namespace_manager, memcache, mail
 import cloudstorage as gcs
@@ -94,6 +95,75 @@ Instance attributes:
         logging.error(err_explain)
         self.response.headers['Content-Type'] = "application/json"
         self.response.write(json.dumps(resp)+"\n")
+
+        # Send email to admin with details
+        mail.send_mail(
+            sender=EMAIL_SENDER,
+            to=ADMIN,
+            subject="[VN-dedupe] Dedupe error",
+            body="""Hey,
+
+Something went wrong with a deduplication request. Here are the details:
+
+File UUID:     %s
+Date-time:     %s
+Error:         %s
+Error explain: %s
+User:          %s
+Content-Type:  %s
+Action:        %s
+Duplicates:    %s
+
+""" % (self.request_namespace, datetime.now(), err_message, err_explain,
+                self.email, self.content_type, self.action, self.duplicates))
+
+        # Send email to user
+        msg = """Hello,
+
+This is a notification email to inform you that something went wrong with the
+de-duplication of your file. The application's administrators have been
+notified. If you want to contact them directly, please send an email to %s or
+visit the following webpage to submit an issue:
+
+https://www.github.com/VertNet/dedupe/issues
+
+Sorry for the inconvenience, and thanks for your understanding.
+""" % ADMIN
+        self.send_email_notification(msg)
+
+        # TODO: Log the error
+
+        return
+
+    def send_email_notification(self, msg):
+        """Send email to user with success/failure notification."""
+
+        if msg == "success":
+
+            # Assign email subject
+            subject = EMAIL_SUCCESS_SUBJECT
+
+            # Build explanation note for email
+            if self.action == "flag":
+                action_description = ACTION_FLAG
+            elif self.action == "remove":
+                action_description = ACTION_REMOVE
+
+            # Create email body
+            body = EMAIL_SUCCESS_BODY.format(
+                self.file_url,
+                action_description,
+                json.dumps(self.report, sort_keys=True, indent=4))
+
+        else:
+            subject = EMAIL_ERROR_SUBJECT
+            body = msg
+
+        # Send email
+        sender = EMAIL_SENDER
+        to = self.email
+        mail.send_mail(sender=sender, to=to, subject=subject, body=body)
+
         return
 
     def check_strict_dupes(self, row):
@@ -154,9 +224,11 @@ one."""
                 self.f.write(si.getvalue())
                 # logging.info("Wrote line in %s" % self.file_name)
             except Exception, e:
-                logging.error("Something went wrong writing a row\n"
-                              "f: %s\nrow: %s\nerror: %s" %
-                              (self.file_name, row, e))
+                logging.warning("Something went wrong writing a row\n"
+                                "f: %s\nrow: %s\nerror: %s" %
+                                (self.file_name, row, e))
+                self.warnings.append("Could not write record %s in new file" %
+                                     self.records)
 
         # If duplicate and action="flag", add flag
         if self.action == "flag" and self.is_dupe != NO_DUPE:
@@ -194,7 +266,11 @@ one."""
             self.duplicates = [x for x in ALLOWED_DUPLICATES if x is not "all"]
 
         # Get file from GCS
-        self.file = gcs.open(self.file_name)
+        try:
+            self.file = gcs.open(self.file_name)
+        except Exception, e:
+            self._err(500, "Could not open uploaded file", e)
+            return
         self.reader = csv.reader(self.file, delimiter=self.delimiter)
 
         # Initialize warnings
@@ -219,16 +295,22 @@ one."""
         if self.action != "report":
             self.file_name = "/".join(["", BUCKET, self.request_namespace])
             self.file_name = "%s/modif.%s" % (self.file_path, self.extension)
+
+            # Open file
             try:
                 self.f = gcs.open(self.file_name, 'w',
                                   content_type=self.content_type)
                 logging.info("Created GCS file in %s" % self.file_name)
+            except Exception, e:
+                self._err(500, "Could not open result file", e)
+
+            # Write headers
+            try:
                 self.f.write(str(self.delimiter.join(self.headers)))
                 self.f.write("\n")
                 logging.info("Successfully wrote headers in file")
             except Exception, e:
-                logging.error("Something went wrong opening the file:\n"
-                              "f: %s\nerror: %s" % (self.file_name, e))
+                self._err(500, "Could not write headers in result file", e)
 
         # Parse records
         for row in self.reader:
@@ -243,7 +325,9 @@ one."""
             if "partial" in self.duplicates and self.is_dupe == NO_DUPE:
                 self.check_partial_dupes(row)
 
-            # More type of duplicates will be added here
+            ##
+            # TODO: More type of duplicates will be added here
+            ##
 
             # Handle row according to check result and action type
             self.handle_row(row)
@@ -256,8 +340,10 @@ one."""
                                 self.file_name
                 logging.info("Successfully created file %s" % self.file_name)
             except Exception, e:
-                logging.error("Something went wrong creating the file\n"
-                              "f: %s\nerror: %s" % (self.file_name, e))
+                self._err(500, "Could not close result file", e)
+
+        # TODO: Update report
+        #   - Make concise report for email and longer as attachment
 
         # Build report skeleton
         self.report = {
@@ -300,22 +386,10 @@ one."""
         if self.action != "report":
             self.report["file_url"] = self.file_url
 
-        # Send email to user
-        if self.action != "report":
+        # Send notification to user
+        self.send_email_notification("success")
 
-            # Build explanation note for email
-            if self.action == "flag":
-                action_description = ACTION_FLAG
-            elif self.action == "remove":
-                action_description = ACTION_REMOVE
-            subject = EMAIL_SUBJECT
-            sender = EMAIL_SENDER
-            to = self.email
-            body = EMAIL_BODY.format(
-                self.file_url,
-                action_description,
-                json.dumps(self.report, sort_keys=True, indent=4))
-            mail.send_mail(sender=sender, to=to, subject=subject, body=body)
+        # TODO: Log
 
         # Return to default namespace
         namespace_manager.set_namespace(self.previous_namespace)

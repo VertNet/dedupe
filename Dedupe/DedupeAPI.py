@@ -254,7 +254,13 @@ Instance attributes:
             )
 
         # Build response
-        resp = "{}"
+        msg = "De-duplication successfully initiated. Please check your email"
+        msg += " address for notifications"
+        resp = {
+            "status": "success",
+            "message": msg,
+            "email": self.email
+        }
         self.response.headers['Content-Type'] = "application/json"
         self.response.write(json.dumps(resp)+"\n")
         return

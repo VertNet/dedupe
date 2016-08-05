@@ -54,9 +54,11 @@ rows, so you should see the dataset has now fewer records. Please check out the
 report below to find more information about the removed records.
 """
 
+ADMIN = "javier.otegui@gmail.com"
 EMAIL_SENDER = "VertNet Tools - De-duplication <javier.otegui@gmail.com>"
-EMAIL_SUBJECT = "Your de-duplicated file is ready"
-EMAIL_BODY = """Hello,
+EMAIL_SUCCESS_SUBJECT = "Your de-duplicated file is ready"
+EMAIL_ERROR_SUBJECT = "Something went wrong with the de-duplication process"
+EMAIL_SUCCESS_BODY = """Hello,
 
 This is a notification email to inform you that the file you sent to the
 VertNet de-duplication API is ready and available for download here (link
@@ -67,9 +69,7 @@ available for 24h):
 
 Finally, this is what the system has gathered from the de-duplication system:
 
-<pre>
 {}
-</pre>
 
 You can find more information on the de-duplication system here:
 
