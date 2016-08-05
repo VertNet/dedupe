@@ -60,6 +60,7 @@ Instance attributes:
 - country: Code of the country of the request
 - dat: position of the "eventDate" field in the file
 - delimiter: field delimiter, accordint to content_type variable
+- dupe_ref: position of the original record (for flagging)
 - duplicate_ids: list of values of the "id" field in duplicate records,
                  for strict duplicates
 - duplicate_order: position of the original-duplicate pair of records,
@@ -202,6 +203,7 @@ one."""
         if dupe is not None:
             self.is_dupe = STRICT_DUPE
             self.strict_duplicates += 1
+            self.dupe_ref = dupe
             self.duplicate_order.add((dupe, self.records))
             if self.id_field is not None:
                 self.duplicate_ids.add(row[self.idx])
@@ -223,6 +225,7 @@ one."""
         if pdupe is not None:
             self.is_dupe = PARTIAL_DUPE
             self.partial_duplicates += 1
+            self.dupe_ref = pdupe
             self.partial_duplicates_order.add((pdupe, self.records))
             if self.id_field is not None:
                 self.partial_duplicate_ids.add(row[self.idx])
@@ -240,24 +243,51 @@ one."""
 - Duplicate and action is flag: update record and write row
 """
 
-        # If no duplicate, write row
-        if self.action != "report" and self.is_dupe == NO_DUPE:
+        # # If no duplicate, write row
+        # if self.action != "report" and self.is_dupe == NO_DUPE:
+        #     try:  # Workaround to handle proper conversion
+        #         si = StringIO()
+        #         cw = csv.writer(si, delimiter=self.delimiter)
+        #         if self.action == "flag":
+        #             row += [0, None, None]  # Add the three flag fields
+        #         cw.writerow(row)
+        #         self.f.write(si.getvalue())
+        #         # logging.info("Wrote line in %s" % self.file_name)
+        #     except Exception, e:
+        #         logging.warning("Something went wrong writing a row\n"
+        #                         "f: %s\nrow: %s\nerror: %s" %
+        #                         (self.file_name, row, e))
+        #         self.warnings.append("Could not write record %s in new file" %
+        #                              self.records)
+
+        # # If duplicate and action is "flag", add flag
+        # if self.action == "flag" and self.is_dupe != NO_DUPE:
+        #     pass
+
+        # If action is remove and is duplicate, or action is report, omit write
+        if (self.action == "remove" and self.is_dupe != NO_DUPE) \
+                or self.action == "report":
+            pass
+
+        # Otherwise, write row
+        else:
+            # If action is flag, add three flag fields to row
+            if self.action == "flag":
+                row.append(bool(self.is_dupe))
+                row.append(self.is_dupe if self.is_dupe > 0 else None)
+                row.append(self.dupe_ref)
+
             try:  # Workaround to handle proper conversion
                 si = StringIO()
                 cw = csv.writer(si, delimiter=self.delimiter)
                 cw.writerow(row)
                 self.f.write(si.getvalue())
-                # logging.info("Wrote line in %s" % self.file_name)
             except Exception, e:
                 logging.warning("Something went wrong writing a row\n"
                                 "f: %s\nrow: %s\nerror: %s" %
                                 (self.file_name, row, e))
                 self.warnings.append("Could not write record %s in new file" %
                                      self.records)
-
-        # If duplicate and action="flag", add flag
-        if self.action == "flag" and self.is_dupe != NO_DUPE:
-            pass  # TODO: implement "flag" action
 
     def post(self):
         """Main function. Parse the file for duplicates."""
@@ -337,6 +367,8 @@ one."""
                 self._err(500, "Could not open result file", e)
 
             # Write headers
+            if self.action == "flag":
+                self.headers += ["isDuplicate", "duplicateType", "duplicateOf"]
             try:
                 self.f.write(str(self.delimiter.join(self.headers)))
                 self.f.write("\n")
@@ -348,6 +380,7 @@ one."""
         for row in self.reader:
             self.records += 1
             self.is_dupe = NO_DUPE
+            self.dupe_ref = None
 
             # Check for strict duplicates
             if "strict" in self.duplicates and self.is_dupe == NO_DUPE:

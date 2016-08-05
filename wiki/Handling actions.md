@@ -6,6 +6,7 @@
     1. [New version](#new-version)
 1. [`remove`](#remove)
 1. [`flag`](#flag)
+1. [Table of effects](#table-of-effects)
 
 <!-- /MarkdownTOC -->
 
@@ -58,3 +59,15 @@ A recent conversation with John helped me clarify certain aspects of duplicate f
 * `isDuplicate` is a boolean field indicating whether or not the row is a duplicate of another row
 * `dupicateType` is a controlled vocabulary indicating the type of duplicate: `full`, `partial` or any other
 * `duplicateOf` is a list of all the other record IDs for which the current record is a duplicate. Even for strict duplicates, for the sake of consistency, it makes sense to make this field a list.
+
+<a name="table-of-effects"></a>
+# Table of effects
+
+| Action | isDuplicate | Effect |
+|--------|:-----------:|--------|
+| report | no | Nothing |
+| report | yes | Add to list |
+| remove | no | Write row with no flags |
+| remove | yes | Don't write row |
+| flag | no | Write row with `[0, null, null]` |
+| flag | yes | Write row with `[1, type, list_of_dupes]` |
