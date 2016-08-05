@@ -434,7 +434,7 @@ one."""
             id_field=self.id_field, namespace=self.request_namespace,
             content_type=self.content_type, file_size=self.file_size,
             records=self.records, fields=len(self.headers),
-            strict_duplicates=self.strict_duplicates,
+            strict_duplicates=self.strict_duplicates, api_version=API_VERSION,
             partial_duplicates=self.partial_duplicates
         )
         taskqueue.add(
