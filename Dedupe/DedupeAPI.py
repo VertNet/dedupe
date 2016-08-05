@@ -231,6 +231,9 @@ Instance attributes:
 
         # Launch async task with parameters
         params = {
+            "latlon": self.cityLatLong,
+            "country": self.country,
+            "user_agent": self.user_agent,
             "email": self.email,
             "request_namespace": self.request_namespace,
             "previous_namesapce": self.previous_namespace,

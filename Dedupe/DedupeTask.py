@@ -25,6 +25,7 @@ Usage:
 
 """
 
+import os
 import csv
 import json
 import hashlib
@@ -32,11 +33,20 @@ import logging
 from StringIO import StringIO
 from datetime import datetime
 
-from google.appengine.api import namespace_manager, memcache, mail
+from google.appengine.api import namespace_manager, memcache, mail, taskqueue
 import cloudstorage as gcs
 import webapp2
 
 from config import *
+
+LAST_UPDATED = '2016-08-05T13:15:56+CEST'
+API_VERSION = 'search 2016-08-05T13:15:56+CEST'
+
+IS_DEV = os.environ.get('SERVER_SOFTWARE', '').startswith('Development')
+if IS_DEV:
+    QUEUE_NAME = 'default'
+else:
+    QUEUE_NAME = 'apitracker'
 
 
 class DedupeTask(webapp2.RequestHandler):
@@ -131,8 +141,23 @@ Sorry for the inconvenience, and thanks for your understanding.
 """ % ADMIN
         self.send_email_notification(msg)
 
-        # TODO: Log the error
-
+        # Log the error
+        params = dict(
+            latlon=self.latlon, country=self.country, status="error",
+            user_agent=self.user_agent, warnings=self.warnings,
+            error=err_message, email=self.email, action=self.action,
+            duplicates=self.duplicates,
+            loc=self.headers[self.loc], sci=self.headers[self.sci],
+            dat=self.headers[self.dat], col=self.headers[self.col],
+            id_field=self.id_field, namespace=self.request_namespace,
+            content_type=self.content_type, file_size=self.file_size
+        )
+        taskqueue.add(
+            url='/service/v0/log',
+            payload=json.dumps(params),
+            queue_name=QUEUE_NAME
+        )
+        logging.info("Logging enqueued")
         return
 
     def send_email_notification(self, msg):
@@ -238,6 +263,9 @@ one."""
         """Main function. Parse the file for duplicates."""
 
         # Initialize variables from request
+        self.latlon = self.request.get("latlon", None)
+        self.country = self.request.get("country", None)
+        self.user_agent = self.request.get("user_agent", None)
         self.email = self.request.get("email", None)
         self.request_namespace = self.request.get("request_namespace", None)
         self.request_namespace = str(self.request_namespace)
@@ -264,6 +292,10 @@ one."""
         # Transform "all" in list of elements for duplicate types
         if self.duplicates == "all":
             self.duplicates = [x for x in ALLOWED_DUPLICATES if x is not "all"]
+
+        # Store file size for logging
+        self.file_size = gcs.stat(self.file_name).st_size
+        logging.info("File size: %s" % self.file_size)
 
         # Get file from GCS
         try:
@@ -389,10 +421,28 @@ one."""
         # Send notification to user
         self.send_email_notification("success")
 
-        # TODO: Log
-
         # Return to default namespace
         namespace_manager.set_namespace(self.previous_namespace)
+
+        # Add entry to log
+        params = dict(
+            latlon=self.latlon, country=self.country, status="success",
+            user_agent=self.user_agent, warnings=self.warnings, error=None,
+            email=self.email, action=self.action, duplicates=self.duplicates,
+            loc=self.headers[self.loc], sci=self.headers[self.sci],
+            dat=self.headers[self.dat], col=self.headers[self.col],
+            id_field=self.id_field, namespace=self.request_namespace,
+            content_type=self.content_type, file_size=self.file_size,
+            records=self.records, fields=len(self.headers),
+            strict_duplicates=self.strict_duplicates,
+            partial_duplicates=self.partial_duplicates
+        )
+        taskqueue.add(
+            url='/service/v0/log',
+            payload=json.dumps(params),
+            queue_name=QUEUE_NAME
+        )
+        logging.info("Logging enqueued")
 
         # Build response
         resp = self.report

@@ -20,15 +20,21 @@ import webapp2
 # API methods
 from Dedupe.DedupeAPI import DedupeApi
 from Dedupe.DedupeTask import DedupeTask
+from Dedupe.DedupeLog import DedupeLog
 
 LAST_UPDATED = ''
 
 routes = [
-    # API methods, v1 (2016-05-20T12:37:29+CEST)
+
+    # API methods
     webapp2.Route(r'/api/v0/dedupe', handler=DedupeApi),
 
     # Background service
-    webapp2.Route(r'/service/v0/dedupe', handler=DedupeTask)
+    webapp2.Route(r'/service/v0/dedupe', handler=DedupeTask),
+
+    # Logging service
+    webapp2.Route(r'/service/v0/log', handler=DedupeLog)
+
 ]
 
 handlers = webapp2.WSGIApplication(routes, debug=True)
