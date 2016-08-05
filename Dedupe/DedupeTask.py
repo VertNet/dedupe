@@ -243,27 +243,6 @@ one."""
 - Duplicate and action is flag: update record and write row
 """
 
-        # # If no duplicate, write row
-        # if self.action != "report" and self.is_dupe == NO_DUPE:
-        #     try:  # Workaround to handle proper conversion
-        #         si = StringIO()
-        #         cw = csv.writer(si, delimiter=self.delimiter)
-        #         if self.action == "flag":
-        #             row += [0, None, None]  # Add the three flag fields
-        #         cw.writerow(row)
-        #         self.f.write(si.getvalue())
-        #         # logging.info("Wrote line in %s" % self.file_name)
-        #     except Exception, e:
-        #         logging.warning("Something went wrong writing a row\n"
-        #                         "f: %s\nrow: %s\nerror: %s" %
-        #                         (self.file_name, row, e))
-        #         self.warnings.append("Could not write record %s in new file" %
-        #                              self.records)
-
-        # # If duplicate and action is "flag", add flag
-        # if self.action == "flag" and self.is_dupe != NO_DUPE:
-        #     pass
-
         # If action is remove and is duplicate, or action is report, omit write
         if (self.action == "remove" and self.is_dupe != NO_DUPE) \
                 or self.action == "report":

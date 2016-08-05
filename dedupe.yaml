@@ -17,11 +17,11 @@
 
 # CODEBASE INFO
 # Last pushed to master branch: 08/05/2016
-# Last commit to master branch: 61daec8
+# Last commit to master branch: 72da680
 #
 # DEPLOYMENT INFO
 # Last deployed dev version: 08/05/2016
-# Last commit on dev version: 61daec8
+# Last commit on dev version: 72da680
 # Last deployed prod version: 
 # Last commit on prod verson: 
 # command: gcloud preview app deploy dedupe.yaml
@@ -31,7 +31,6 @@
 #   --promote  # Optional, removes the version id from the deployment URL. Skip for testing and/or dev version
 #
 # TODO:
-#   - Implement "flag" action
 #   - Build README
 #   - Build front-end form
 #   - Add support for DWCAs
